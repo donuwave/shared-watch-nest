@@ -23,6 +23,7 @@ import { RolesGuard } from '../../guards/roles.guard';
 import { CreateRoleDto } from './dto/create.dto';
 import { UUIDPipe } from '../../pipes/uuid.pipe';
 import { UpdateRoleDto } from './dto/update.dto';
+import { EmailVerificationGuard } from '../../guards/email-verification.guard';
 
 @ApiTags('Roles')
 @ApiBearerAuth('jwt')
@@ -31,7 +32,7 @@ export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, EmailVerificationGuard, RolesGuard)
   @Roles('admin')
   @ApiOperation({ summary: 'Создать новую роль' })
   @ApiResponse({ status: 201, description: 'Роль успешно создана' })
@@ -72,7 +73,7 @@ export class RoleController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, EmailVerificationGuard, RolesGuard)
   @Roles('admin')
   @ApiOperation({ summary: 'Обновить роль (только админ)' })
   @ApiResponse({ status: 200, description: 'Роль успешно обновлена' })
@@ -93,7 +94,7 @@ export class RoleController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, EmailVerificationGuard, RolesGuard)
   @Roles('admin')
   @ApiOperation({ summary: 'Удалить роль (мягкое удаление, только админ)' })
   @ApiResponse({ status: 200, description: 'Роль успешно удалена' })
