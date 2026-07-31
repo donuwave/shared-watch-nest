@@ -12,6 +12,7 @@ import { Session } from '../session/session.entity';
 import { Role } from '../role/role.entity';
 
 @Entity('users')
+@Index(['username', 'discriminator'], { unique: true })
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -23,11 +24,14 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ nullable: true })
-  firstName?: string;
+  @Column({ length: 32 })
+  username: string;
 
-  @Column({ nullable: true })
-  lastName?: string;
+  @Column({ length: 4 })
+  discriminator: string;
+
+  @Column({ type: 'text', nullable: true })
+  avatarUrl?: string | null;
 
   @Column({ default: false })
   isEmailVerified: boolean;

@@ -35,8 +35,9 @@ export class UsersService {
     const user = this.usersRepository.create({
       email: createdUser.email,
       password: hashedPassword,
-      firstName: createdUser.firstName,
-      lastName: createdUser.lastName,
+      username: createdUser.username,
+      discriminator: await this.generateDiscriminator(createdUser.username),
+      avatarUrl: createdUser.avatarUrl ?? null,
       isEmailVerified: false,
       blocked: false,
       emailVerifiedAt: null,
@@ -51,8 +52,9 @@ export class UsersService {
       select: [
         'id',
         'email',
-        'firstName',
-        'lastName',
+        'username',
+        'discriminator',
+        'avatarUrl',
         'isEmailVerified',
         'blocked',
         'createdAt',
@@ -98,9 +100,19 @@ export class UsersService {
 
   async update(id: string, updatedUser: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
-    const newUser = { ...user, ...updatedUser };
 
-    return await this.usersRepository.save(newUser);
+    if (updatedUser.username && updatedUser.username !== user.username) {
+      user.username = updatedUser.username;
+      user.discriminator = await this.generateDiscriminator(
+        updatedUser.username,
+      );
+    }
+
+    if (updatedUser.avatarUrl !== undefined) {
+      user.avatarUrl = updatedUser.avatarUrl;
+    }
+
+    return await this.usersRepository.save(user);
   }
 
   async changePassword(
@@ -140,5 +152,23 @@ export class UsersService {
     }
 
     return 'verification_expired';
+  }
+
+  private async generateDiscriminator(username: string): Promise<string> {
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      const discriminator = Math.floor(Math.random() * 10000)
+        .toString()
+        .padStart(4, '0');
+
+      const existingUser = await this.usersRepository.findOne({
+        where: { username, discriminator },
+      });
+
+      if (!existingUser) {
+        return discriminator;
+      }
+    }
+
+    throw new ConflictException('Не удалось подобрать свободный username');
   }
 }

@@ -45,8 +45,9 @@ export class AuthService {
       profile: {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        username: user.username,
+        discriminator: user.discriminator,
+        avatarUrl: user.avatarUrl,
         role: user.role?.name,
       },
       emailVerification: {

@@ -4,6 +4,7 @@ import {
   IsString,
   MinLength,
   Matches,
+  Length,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -26,13 +27,13 @@ export class RegisterDto {
   )
   password: string;
 
-  @ApiProperty({ example: 'John' })
+  @ApiProperty({ example: 'donu' })
   @IsString()
   @IsNotEmpty()
-  firstName: string;
-
-  @ApiProperty({ example: 'Doe' })
-  @IsString()
-  @IsNotEmpty()
-  lastName: string;
+  @Length(2, 32)
+  @Matches(/^[A-Za-z0-9_.-]+$/, {
+    message:
+      'Username can contain only letters, numbers, underscores, dots and hyphens',
+  })
+  username: string;
 }
