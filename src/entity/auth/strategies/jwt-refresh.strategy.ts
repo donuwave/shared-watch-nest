@@ -19,28 +19,39 @@ export class JwtRefreshStrategy extends PassportStrategy(
   ) {
     super({
       jwtFromRequest: (req: Request) => {
-        return req.cookies['refreshToken'];
+        return req.cookies?.['refreshToken'];
       },
       ignoreExpiration: false,
-      secretOrKey: configService.getOrThrow('JWT_ACCESS_SECRET'),
+      passReqToCallback: true,
+      secretOrKey: configService.getOrThrow('JWT_REFRESH_SECRET'),
     });
   }
 
-  async validate({ userId, sessionId, email }: JwtPayload) {
-    // Находим сессию по refresh token
-    const session = await this.sessionsService.findOne(sessionId);
+  async validate(req: Request, { userId, sessionId, email }: JwtPayload) {
+    const refreshToken = req.cookies?.['refreshToken'];
 
-    if (!session || session.expiresAt < new Date()) {
+    if (!refreshToken) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
-    // Находим пользователя
-    const user = await this.usersService.findOne(userId);
+    const session = await this.sessionsService
+      .findOne(sessionId)
+      .catch(() => {
+        throw new UnauthorizedException('Invalid or expired refresh token');
+      });
 
-    if (!user) {
-      throw new UnauthorizedException('User not found');
+    if (
+      session.userId !== userId ||
+      session.refreshToken !== refreshToken ||
+      session.expiresAt < new Date()
+    ) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
-    return { session, user, email };
+    await this.usersService.findOne(userId).catch(() => {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    });
+
+    return { userId, sessionId, email };
   }
 }

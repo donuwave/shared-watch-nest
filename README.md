@@ -41,6 +41,8 @@ PORT=9000
 # JWT
 JWT_ACCESS_SECRET=local_super_secret_change_in_production
 JWT_ACCESS_EXPIRATION=3600
+JWT_REFRESH_SECRET=local_refresh_super_secret_change_in_production
+JWT_REFRESH_EXPIRATION=30d
 ```
 
 🌱 Dev окружение (докер)
