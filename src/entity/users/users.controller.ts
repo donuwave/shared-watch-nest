@@ -24,6 +24,7 @@ import { ChangePasswordDto } from './dto/updatePassword.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { RolesGuard } from '../../guards/roles.guard';
 import { Roles } from '../../decorators/roles.decorator';
+import { EmailVerificationGuard } from '../../guards/email-verification.guard';
 
 @ApiTags('Users')
 @ApiBearerAuth('jwt')
@@ -51,7 +52,7 @@ export class UsersController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, EmailVerificationGuard, RolesGuard)
   @Roles('admin', 'moderator')
   @ApiOperation({ summary: 'Создание пользователей' })
   @ApiResponse({ status: 201, description: 'Пользователь создан успешно' })
@@ -60,6 +61,7 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, EmailVerificationGuard)
   @ApiOperation({ summary: 'Обновление пользователя' })
   @ApiResponse({ status: 201, description: 'Пользователь изменен' })
   @ApiParam({
@@ -75,6 +77,7 @@ export class UsersController {
   }
 
   @Patch(':id/password')
+  @UseGuards(JwtAuthGuard, EmailVerificationGuard)
   @ApiOperation({ summary: 'Изменить пароль пользователя' })
   @ApiResponse({ status: 200, description: 'Пароль успешно изменен' })
   @ApiResponse({ status: 400, description: 'Текущий пароль неверный' })
@@ -92,6 +95,7 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, EmailVerificationGuard)
   @ApiOperation({ summary: 'Удаление пользователя' })
   @ApiResponse({ status: 201, description: 'Пользователь успешно удален' })
   async delete(@Param('id', UUIDPipe) id: string): Promise<User> {

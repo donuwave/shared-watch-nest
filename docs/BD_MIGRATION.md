@@ -17,7 +17,7 @@ src/config/database/data-source.ts
 ```ts
 import { EmailToken } from '../../entity/email-token/email-token.entity';
 
-entities: [Role, Session, User, EmailToken],
+entities: [Role, Session, User, EmailToken]
 ```
 
 Название таблицы в entity лучше задавать явно:

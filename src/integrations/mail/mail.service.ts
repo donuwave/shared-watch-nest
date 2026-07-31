@@ -10,7 +10,6 @@ type SmtpTransportOptions = SMTPTransport.Options & {
 @Injectable()
 export class MailService {
   private transporter?: Transporter;
-
   constructor(private readonly configService: ConfigService) {}
 
   async sendEmailVerification(email: string, token: string): Promise<void> {
