@@ -43,6 +43,15 @@ JWT_ACCESS_SECRET=local_super_secret_change_in_production
 JWT_ACCESS_EXPIRATION=3600
 JWT_REFRESH_SECRET=local_refresh_super_secret_change_in_production
 JWT_REFRESH_EXPIRATION=30d
+
+# Почта
+APP_FRONTEND_URL=http://localhost:3000
+MAIL_HOST=
+MAIL_PORT=587
+MAIL_USER=
+MAIL_PASSWORD=
+MAIL_FROM="Shared Watch <no-reply@shared-watch.local>"
+MAIL_SECURE=false
 ```
 
 🌱 Dev окружение (докер)
