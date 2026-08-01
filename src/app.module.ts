@@ -7,6 +7,8 @@ import { AuthModule } from './entity/auth/auth.module';
 import { RoleModule } from './entity/role/role.module';
 import { OAuthAccountModule } from './entity/oauth-account/oauth-account.module';
 import { FeatureModule } from './entity/feature/feature.module';
+import { RoomModule } from './entity/room/room.module';
+import { VideoSyncModule } from './entity/video-sync/video-sync.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { FeatureModule } from './entity/feature/feature.module';
     RoleModule,
     OAuthAccountModule,
     FeatureModule,
+    RoomModule,
+    VideoSyncModule,
   ],
   controllers: [],
   providers: [],

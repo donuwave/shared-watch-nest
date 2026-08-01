@@ -6,6 +6,11 @@ import { EmailToken } from '../../entity/email-token/email-token.entity';
 import { OAuthAccount } from '../../entity/oauth-account/oauth-account.entity';
 import { Feature } from '../../entity/feature/feature.entity';
 import { FeatureRole } from '../../entity/feature/feature-role.entity';
+import { Room } from '../../entity/room/room.entity';
+import { RoomParticipant } from '../../entity/room/room-participant.entity';
+import { RoomInvite } from '../../entity/room/room-invite.entity';
+import { RoomPresence } from '../../entity/room/room-presence.entity';
+import { VideoState } from '../../entity/video-sync/video-state.entity';
 
 const dbPort = Number(process.env.DB_PORT ?? 5432);
 
@@ -24,6 +29,11 @@ export default new DataSource({
     OAuthAccount,
     Feature,
     FeatureRole,
+    Room,
+    RoomParticipant,
+    RoomInvite,
+    RoomPresence,
+    VideoState,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   migrationsTableName: 'typeorm_migrations',
