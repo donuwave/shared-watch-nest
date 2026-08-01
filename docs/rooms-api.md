@@ -69,6 +69,46 @@ Authorization: Bearer <accessToken>
 
 Only active room participants can read room details.
 
+## Get Room State
+
+```http
+GET /rooms/:id/state
+Authorization: Bearer <accessToken>
+```
+
+Use this endpoint after page reload or reconnect to restore the room UI.
+
+Only active room participants can read state.
+
+Response:
+
+```json
+{
+  "room": {},
+  "currentParticipant": {},
+  "participants": [],
+  "presence": [],
+  "video": null
+}
+```
+
+`participants` contains active participants only. User objects are sanitized:
+
+```json
+{
+  "id": "uuid",
+  "username": "donu",
+  "discriminator": "1234",
+  "avatarUrl": null
+}
+```
+
+`presence` contains recent presence records based on:
+
+```env
+ROOM_PRESENCE_GRACE_PERIOD_MS=180000
+```
+
 ## Leave Room
 
 ```http
@@ -214,3 +254,5 @@ Body:
 ```
 
 Video playback sync is documented separately in `docs/video-sync-api.md`.
+
+Room chat is documented separately in `docs/chat-api.md`.

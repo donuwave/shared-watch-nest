@@ -11,16 +11,29 @@ import { UsersModule } from '../users/users.module';
 import { FeatureModule } from '../feature/feature.module';
 import { RoomCleanupService } from './room-cleanup.service';
 import { RoomPresenceGateway } from './gateways/room-presence.gateway';
+import { RoomStateService } from './room-state.service';
+import { VideoState } from '../video-sync/video-state.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Room, RoomParticipant, RoomInvite, RoomPresence]),
+    TypeOrmModule.forFeature([
+      Room,
+      RoomParticipant,
+      RoomInvite,
+      RoomPresence,
+      VideoState,
+    ]),
     UsersModule,
     FeatureModule,
     JwtModule.register({}),
   ],
   controllers: [RoomController],
-  providers: [RoomService, RoomCleanupService, RoomPresenceGateway],
+  providers: [
+    RoomService,
+    RoomCleanupService,
+    RoomPresenceGateway,
+    RoomStateService,
+  ],
   exports: [RoomService],
 })
 export class RoomModule {}

@@ -9,6 +9,8 @@ import { OAuthAccountModule } from './entity/oauth-account/oauth-account.module'
 import { FeatureModule } from './entity/feature/feature.module';
 import { RoomModule } from './entity/room/room.module';
 import { VideoSyncModule } from './entity/video-sync/video-sync.module';
+import { RealtimeApiModule } from './realtime-api/realtime-api.module';
+import { ChatModule } from './entity/chat/chat.module';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { VideoSyncModule } from './entity/video-sync/video-sync.module';
     FeatureModule,
     RoomModule,
     VideoSyncModule,
+    ChatModule,
+    RealtimeApiModule,
   ],
   controllers: [],
   providers: [],

@@ -11,6 +11,8 @@ import { RoomParticipant } from '../../entity/room/room-participant.entity';
 import { RoomInvite } from '../../entity/room/room-invite.entity';
 import { RoomPresence } from '../../entity/room/room-presence.entity';
 import { VideoState } from '../../entity/video-sync/video-state.entity';
+import { ChatMessage } from '../../entity/chat/chat-message.entity';
+import { ChatReadState } from '../../entity/chat/chat-read-state.entity';
 
 const dbPort = Number(process.env.DB_PORT ?? 5432);
 
@@ -34,6 +36,8 @@ export default new DataSource({
     RoomInvite,
     RoomPresence,
     VideoState,
+    ChatMessage,
+    ChatReadState,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   migrationsTableName: 'typeorm_migrations',

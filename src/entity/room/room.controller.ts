@@ -16,6 +16,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { RoomService } from './room.service';
+import { RoomStateService } from './room-state.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomAccessDto } from './dto/update-room-access.dto';
 import { UpdateRoomParticipantRoleDto } from './dto/update-room-participant-role.dto';
@@ -30,7 +31,10 @@ import { UUIDPipe } from '../../pipes/uuid.pipe';
 @ApiBearerAuth('jwt')
 @Controller('rooms')
 export class RoomController {
-  constructor(private readonly roomService: RoomService) {}
+  constructor(
+    private readonly roomService: RoomService,
+    private readonly roomStateService: RoomStateService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, FeatureGuard)
@@ -108,6 +112,18 @@ export class RoomController {
     @CurrentUser() user: JwtPayload,
   ) {
     return await this.roomService.updateAccess(id, user.userId, dto.isOpen);
+  }
+
+  @Get(':id/state')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Получить состояние комнаты для восстановления UI' })
+  @ApiParam({ name: 'id', description: 'ID комнаты в формате UUID v4' })
+  @ApiResponse({ status: 200, description: 'Состояние комнаты' })
+  async getState(
+    @Param('id', UUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return await this.roomStateService.getState(id, user.userId);
   }
 
   @Get(':id')

@@ -44,6 +44,12 @@ GET /rooms/:roomId/video
 
 Any active room participant can read state.
 
+For full room UI restore after reconnect, use:
+
+```http
+GET /rooms/:roomId/state
+```
+
 ## WebSocket
 
 Namespace:

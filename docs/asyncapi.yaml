@@ -1,0 +1,681 @@
+asyncapi: '2.6.0'
+info:
+  title: Shared Watch Realtime API
+  version: '1.0.0'
+  description: Socket.IO события для presence комнат и синхронизации видео.
+defaultContentType: application/json
+tags:
+  - name: Room Presence
+    description: Подключение к комнате, heartbeat и события online/offline.
+  - name: Video Sync
+    description: Источник видео, play/pause/seek и восстановление состояния видео.
+  - name: Chat
+    description: Будущие события текстового чата.
+  - name: Voice
+    description: Будущие события голосовой связи и WebRTC-сигналинга.
+servers:
+  local:
+    url: http://localhost:9000/rooms
+    protocol: socket.io
+    description: Локальный Socket.IO namespace для realtime событий комнаты.
+    security:
+      - accessToken: []
+channels:
+  room:join:
+    description: Клиент подключается к realtime-каналу комнаты после Socket.IO соединения.
+    publish:
+      operationId: joinRoom
+      summary: Подключиться к presence-каналу комнаты.
+      tags:
+        - name: Room Presence
+      message:
+        $ref: '#/components/messages/RoomJoin'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/OkRoomAck'
+  room:heartbeat:
+    description: Heartbeat клиента для активного presence в комнате.
+    publish:
+      operationId: heartbeatRoom
+      summary: Отметить текущее соединение как активное.
+      tags:
+        - name: Room Presence
+      message:
+        $ref: '#/components/messages/RoomHeartbeat'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/OkAck'
+  presence:joined:
+    description: Сервер отправляет событие участникам комнаты, когда пользователь подключился к presence.
+    subscribe:
+      operationId: presenceJoined
+      summary: Получить событие подключения участника.
+      tags:
+        - name: Room Presence
+      message:
+        $ref: '#/components/messages/PresenceJoined'
+    x-socket-namespace: /rooms
+  presence:left:
+    description: Сервер отправляет событие участникам комнаты, когда пользователь отключился от presence.
+    subscribe:
+      operationId: presenceLeft
+      summary: Получить событие отключения участника.
+      tags:
+        - name: Room Presence
+      message:
+        $ref: '#/components/messages/PresenceLeft'
+    x-socket-namespace: /rooms
+  video:source-set:
+    description: Клиент задает источник видео в комнате. Нужна роль owner или moderator.
+    publish:
+      operationId: setVideoSource
+      summary: Задать источник видео.
+      tags:
+        - name: Video Sync
+      message:
+        $ref: '#/components/messages/VideoSourceSet'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/VideoStateAck'
+  video:play:
+    description: Клиент запускает воспроизведение. Нужна роль owner или moderator.
+    publish:
+      operationId: playVideo
+      summary: Запустить воспроизведение.
+      tags:
+        - name: Video Sync
+      message:
+        $ref: '#/components/messages/VideoControl'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/VideoStateAck'
+  video:pause:
+    description: Клиент ставит воспроизведение на паузу. Нужна роль owner или moderator.
+    publish:
+      operationId: pauseVideo
+      summary: Поставить воспроизведение на паузу.
+      tags:
+        - name: Video Sync
+      message:
+        $ref: '#/components/messages/VideoControl'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/VideoStateAck'
+  video:seek:
+    description: Клиент перематывает видео. Нужна роль owner или moderator.
+    publish:
+      operationId: seekVideo
+      summary: Перемотать видео.
+      tags:
+        - name: Video Sync
+      message:
+        $ref: '#/components/messages/VideoControl'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/VideoStateAck'
+  video:sync-request:
+    description: Клиент запрашивает текущее состояние видео. Нужен активный участник комнаты.
+    publish:
+      operationId: requestVideoSync
+      summary: Запросить текущее состояние видео.
+      tags:
+        - name: Video Sync
+      message:
+        $ref: '#/components/messages/VideoSyncRequest'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/VideoStateAck'
+  video:source-changed:
+    description: Сервер отправляет событие при изменении источника видео.
+    subscribe:
+      operationId: videoSourceChanged
+      summary: Получить событие смены источника.
+      tags:
+        - name: Video Sync
+      message:
+        $ref: '#/components/messages/VideoState'
+    x-socket-namespace: /rooms
+  video:state:
+    description: Сервер отправляет событие при изменении состояния воспроизведения.
+    subscribe:
+      operationId: videoStateChanged
+      summary: Получить обновление состояния видео.
+      tags:
+        - name: Video Sync
+      message:
+        $ref: '#/components/messages/VideoState'
+    x-socket-namespace: /rooms
+  video:sync-state:
+    description: Сервер отправляет событие конкретному клиенту после video:sync-request.
+    subscribe:
+      operationId: videoSyncState
+      summary: Получить текущее состояние видео.
+      tags:
+        - name: Video Sync
+      message:
+        $ref: '#/components/messages/VideoStateOrNull'
+    x-socket-namespace: /rooms
+  chat:send:
+    description: Клиент отправляет сообщение в чат комнаты.
+    publish:
+      operationId: sendChatMessage
+      summary: Отправить сообщение.
+      tags:
+        - name: Chat
+      message:
+        $ref: '#/components/messages/ChatSend'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/ChatMessageAck'
+  chat:edit:
+    description: Клиент редактирует свое сообщение.
+    publish:
+      operationId: editChatMessage
+      summary: Отредактировать сообщение.
+      tags:
+        - name: Chat
+      message:
+        $ref: '#/components/messages/ChatEdit'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/ChatMessageAck'
+  chat:delete:
+    description: Клиент удаляет сообщение. Разрешено автору, owner или moderator.
+    publish:
+      operationId: deleteChatMessage
+      summary: Удалить сообщение.
+      tags:
+        - name: Chat
+      message:
+        $ref: '#/components/messages/ChatDelete'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/ChatMessageAck'
+  chat:typing:
+    description: Клиент отправляет typing indicator, сервер пересылает его остальным участникам.
+    publish:
+      operationId: sendChatTyping
+      summary: Отправить typing indicator.
+      tags:
+        - name: Chat
+      message:
+        $ref: '#/components/messages/ChatTyping'
+    subscribe:
+      operationId: receiveChatTyping
+      summary: Получить typing indicator.
+      tags:
+        - name: Chat
+      message:
+        $ref: '#/components/messages/ChatTypingEvent'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/OkAck'
+  chat:message:
+    description: Сервер отправляет новое сообщение участникам комнаты.
+    subscribe:
+      operationId: receiveChatMessage
+      summary: Получить новое сообщение.
+      tags:
+        - name: Chat
+      message:
+        $ref: '#/components/messages/ChatMessage'
+    x-socket-namespace: /rooms
+  chat:message-edited:
+    description: Сервер отправляет обновленное сообщение после редактирования.
+    subscribe:
+      operationId: receiveEditedChatMessage
+      summary: Получить отредактированное сообщение.
+      tags:
+        - name: Chat
+      message:
+        $ref: '#/components/messages/ChatMessage'
+    x-socket-namespace: /rooms
+  chat:message-deleted:
+    description: Сервер отправляет tombstone сообщения после удаления.
+    subscribe:
+      operationId: receiveDeletedChatMessage
+      summary: Получить удаленное сообщение.
+      tags:
+        - name: Chat
+      message:
+        $ref: '#/components/messages/ChatMessage'
+    x-socket-namespace: /rooms
+  chat:read:
+    description: Клиент отмечает сообщения прочитанными, сервер рассылает read-state участникам комнаты.
+    publish:
+      operationId: markChatRead
+      summary: Отметить сообщения прочитанными.
+      tags:
+        - name: Chat
+      message:
+        $ref: '#/components/messages/ChatRead'
+    subscribe:
+      operationId: receiveChatRead
+      summary: Получить обновление read-state.
+      tags:
+        - name: Chat
+      message:
+        $ref: '#/components/messages/ChatReadState'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/ChatReadStateAck'
+components:
+  securitySchemes:
+    accessToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Передай access token через Socket.IO auth.token или Authorization header.
+  messages:
+    RoomJoin:
+      name: room:join
+      payload:
+        $ref: '#/components/schemas/RoomJoinPayload'
+    RoomHeartbeat:
+      name: room:heartbeat
+      payload:
+        type: object
+        additionalProperties: false
+    PresenceJoined:
+      name: presence:joined
+      payload:
+        $ref: '#/components/schemas/RoomPresenceEvent'
+    PresenceLeft:
+      name: presence:left
+      payload:
+        $ref: '#/components/schemas/RoomPresenceEvent'
+    VideoSourceSet:
+      name: video:source-set
+      payload:
+        $ref: '#/components/schemas/VideoSourceSetPayload'
+    VideoControl:
+      name: video:control
+      payload:
+        $ref: '#/components/schemas/VideoControlPayload'
+    VideoSyncRequest:
+      name: video:sync-request
+      payload:
+        $ref: '#/components/schemas/VideoSyncRequestPayload'
+    VideoState:
+      name: video:state
+      payload:
+        $ref: '#/components/schemas/VideoState'
+    VideoStateOrNull:
+      name: video:sync-state
+      payload:
+        oneOf:
+          - $ref: '#/components/schemas/VideoState'
+          - type: 'null'
+    ChatSend:
+      name: chat:send
+      payload:
+        $ref: '#/components/schemas/ChatSendPayload'
+    ChatEdit:
+      name: chat:edit
+      payload:
+        $ref: '#/components/schemas/ChatEditPayload'
+    ChatDelete:
+      name: chat:delete
+      payload:
+        $ref: '#/components/schemas/ChatDeletePayload'
+    ChatTyping:
+      name: chat:typing
+      payload:
+        $ref: '#/components/schemas/ChatTypingPayload'
+    ChatTypingEvent:
+      name: chat:typing
+      payload:
+        $ref: '#/components/schemas/ChatTypingEvent'
+    ChatMessage:
+      name: chat:message
+      payload:
+        $ref: '#/components/schemas/ChatMessage'
+    ChatRead:
+      name: chat:read
+      payload:
+        $ref: '#/components/schemas/ChatReadPayload'
+    ChatReadState:
+      name: chat:read
+      payload:
+        $ref: '#/components/schemas/ChatReadState'
+  schemas:
+    Uuid:
+      type: string
+      format: uuid
+      example: 8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421
+    RoomJoinPayload:
+      type: object
+      required:
+        - roomId
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+    VideoSyncRequestPayload:
+      type: object
+      required:
+        - roomId
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+    VideoSourceSetPayload:
+      type: object
+      required:
+        - roomId
+        - url
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        url:
+          type: string
+          format: uri
+          example: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+        duration:
+          type: number
+          minimum: 0
+          nullable: true
+          example: 212
+    VideoControlPayload:
+      type: object
+      required:
+        - roomId
+        - currentTime
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        currentTime:
+          type: number
+          minimum: 0
+          example: 35.4
+    RoomPresenceEvent:
+      type: object
+      required:
+        - roomId
+        - userId
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        userId:
+          $ref: '#/components/schemas/Uuid'
+    VideoSourceType:
+      type: string
+      enum:
+        - youtube
+        - direct
+    VideoState:
+      type: object
+      required:
+        - id
+        - roomId
+        - sourceUrl
+        - sourceType
+        - providerVideoId
+        - playing
+        - currentTime
+        - duration
+        - updatedByUserId
+        - createdAt
+        - updatedAt
+      additionalProperties: true
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        sourceUrl:
+          type: string
+          format: uri
+        sourceType:
+          $ref: '#/components/schemas/VideoSourceType'
+        providerVideoId:
+          type: string
+          nullable: true
+          example: dQw4w9WgXcQ
+        playing:
+          type: boolean
+          example: false
+        currentTime:
+          type: number
+          minimum: 0
+          example: 35.4
+        duration:
+          type: number
+          minimum: 0
+          nullable: true
+          example: 212
+        updatedByUserId:
+          allOf:
+            - $ref: '#/components/schemas/Uuid'
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UserSnapshot:
+      type: object
+      required:
+        - id
+        - username
+        - discriminator
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        username:
+          type: string
+          example: donu
+        discriminator:
+          type: string
+          example: '1234'
+        avatarUrl:
+          type: string
+          nullable: true
+    ChatSendPayload:
+      type: object
+      required:
+        - roomId
+        - text
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        text:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          example: Привет
+    ChatEditPayload:
+      type: object
+      required:
+        - roomId
+        - messageId
+        - text
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        messageId:
+          $ref: '#/components/schemas/Uuid'
+        text:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          example: Новый текст
+    ChatDeletePayload:
+      type: object
+      required:
+        - roomId
+        - messageId
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        messageId:
+          $ref: '#/components/schemas/Uuid'
+    ChatTypingPayload:
+      type: object
+      required:
+        - roomId
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        isTyping:
+          type: boolean
+          example: true
+    ChatReadPayload:
+      type: object
+      required:
+        - roomId
+        - messageId
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        messageId:
+          $ref: '#/components/schemas/Uuid'
+    ChatTypingEvent:
+      type: object
+      required:
+        - roomId
+        - userId
+        - isTyping
+        - ts
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        userId:
+          $ref: '#/components/schemas/Uuid'
+        isTyping:
+          type: boolean
+          example: true
+        ts:
+          type: string
+          format: date-time
+    ChatReadState:
+      type: object
+      required:
+        - roomId
+        - userId
+        - lastReadMessageId
+        - lastReadAt
+        - unreadCount
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        userId:
+          $ref: '#/components/schemas/Uuid'
+        lastReadMessageId:
+          allOf:
+            - $ref: '#/components/schemas/Uuid'
+          nullable: true
+        lastReadAt:
+          type: string
+          format: date-time
+          nullable: true
+        unreadCount:
+          type: integer
+          minimum: 0
+          example: 3
+    ChatMessage:
+      type: object
+      required:
+        - id
+        - roomId
+        - userId
+        - text
+        - editedAt
+        - deletedAt
+        - deletedByUserId
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        userId:
+          $ref: '#/components/schemas/Uuid'
+        text:
+          type: string
+          nullable: true
+          example: Привет
+        editedAt:
+          type: string
+          format: date-time
+          nullable: true
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        deletedByUserId:
+          allOf:
+            - $ref: '#/components/schemas/Uuid'
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/UserSnapshot'
+    OkAck:
+      type: object
+      required:
+        - ok
+      properties:
+        ok:
+          type: boolean
+          example: true
+    OkRoomAck:
+      type: object
+      required:
+        - ok
+        - roomId
+      properties:
+        ok:
+          type: boolean
+          example: true
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+    VideoStateAck:
+      type: object
+      required:
+        - ok
+        - state
+      properties:
+        ok:
+          type: boolean
+          example: true
+        state:
+          oneOf:
+            - $ref: '#/components/schemas/VideoState'
+            - type: 'null'
+    ChatMessageAck:
+      type: object
+      required:
+        - ok
+        - message
+      properties:
+        ok:
+          type: boolean
+          example: true
+        message:
+          $ref: '#/components/schemas/ChatMessage'
+    ChatReadStateAck:
+      type: object
+      required:
+        - ok
+        - readState
+      properties:
+        ok:
+          type: boolean
+          example: true
+        readState:
+          $ref: '#/components/schemas/ChatReadState'
