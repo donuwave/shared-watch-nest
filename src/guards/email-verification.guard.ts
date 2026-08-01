@@ -5,13 +5,18 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { UsersService } from '../entity/users/users.service';
+import { JwtPayload } from '../entity/auth/types/jwt-payload.types';
+
+type AuthenticatedRequest = {
+  user?: JwtPayload;
+};
 
 @Injectable()
 export class EmailVerificationGuard implements CanActivate {
   constructor(private usersService: UsersService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const userPayload = request.user;
 
     if (!userPayload?.userId) {

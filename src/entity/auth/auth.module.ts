@@ -9,9 +9,13 @@ import { SessionModule } from '../session/session.module';
 import { JwtStrategy } from './auth.jwt-strategy';
 import { RoleModule } from '../role/role.module';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
-import { EmailTokenService } from '../email-token/email-token.service';
 import { EmailTokenModule } from '../email-token/email-token.module';
 import { MailModule } from '../../integrations/mail/mail.module';
+import { OAuthAccountModule } from '../oauth-account/oauth-account.module';
+import { GitHubStrategy } from './strategies/github.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
+import { YandexStrategy } from './strategies/yandex.strategy';
+import { OAuthRedirectFilter } from '../../filters/oauth-redirect.filter';
 
 @Module({
   imports: [
@@ -22,9 +26,10 @@ import { MailModule } from '../../integrations/mail/mail.module';
     ConfigModule,
     EmailTokenModule,
     MailModule,
+    OAuthAccountModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         secret: configService.get('JWT_ACCESS_SECRET'),
         signOptions: {
           expiresIn: configService.get('JWT_ACCESS_EXPIRATION') || '3600s',
@@ -34,7 +39,15 @@ import { MailModule } from '../../integrations/mail/mail.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtRefreshStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtRefreshStrategy,
+    GitHubStrategy,
+    GoogleStrategy,
+    YandexStrategy,
+    OAuthRedirectFilter,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

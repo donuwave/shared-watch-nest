@@ -17,10 +17,11 @@ export default tseslint.config(
         ...globals.jest,
       },
       sourceType: 'commonjs',
-      parserOptions: {
-        tsconfigRootDir: import.meta.dirname,
-      },
+    parserOptions: {
+      tsconfigRootDir: import.meta.dirname,
+      projectService: true,
     },
+  },
   },
   {
     rules: {

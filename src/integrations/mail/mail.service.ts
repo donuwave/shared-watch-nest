@@ -119,7 +119,11 @@ export class MailService {
         ...message,
       });
     } catch (error) {
-      const smtpError = error as { code?: string; command?: string; message?: string };
+      const smtpError = error as {
+        code?: string;
+        command?: string;
+        message?: string;
+      };
 
       throw new ServiceUnavailableException({
         message: 'SMTP delivery failed',
@@ -190,8 +194,8 @@ export class MailService {
   private isSmtpConfigured(): boolean {
     return Boolean(
       this.configService.get<string>('MAIL_HOST') &&
-        this.configService.get<string>('MAIL_USER') &&
-        this.configService.get<string>('MAIL_PASSWORD'),
+      this.configService.get<string>('MAIL_USER') &&
+      this.configService.get<string>('MAIL_PASSWORD'),
     );
   }
 }

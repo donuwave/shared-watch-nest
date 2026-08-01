@@ -7,6 +7,10 @@ import { JwtPayload } from '../types/jwt-payload.types';
 import { SessionService } from '../../session/session.service';
 import { UsersService } from '../../users/users.service';
 
+type RequestWithCookies = Request & {
+  cookies?: unknown;
+};
+
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
   Strategy,
@@ -19,7 +23,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
   ) {
     super({
       jwtFromRequest: (req: Request) => {
-        return req.cookies?.['refreshToken'];
+        return JwtRefreshStrategy.getRefreshToken(req);
       },
       ignoreExpiration: false,
       passReqToCallback: true,
@@ -27,18 +31,19 @@ export class JwtRefreshStrategy extends PassportStrategy(
     });
   }
 
-  async validate(req: Request, { userId, sessionId, email }: JwtPayload) {
-    const refreshToken = req.cookies?.['refreshToken'];
+  async validate(
+    req: Request,
+    { userId, sessionId, email }: JwtPayload,
+  ): Promise<JwtPayload> {
+    const refreshToken = JwtRefreshStrategy.getRefreshToken(req);
 
     if (!refreshToken) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
-    const session = await this.sessionsService
-      .findOne(sessionId)
-      .catch(() => {
-        throw new UnauthorizedException('Invalid or expired refresh token');
-      });
+    const session = await this.sessionsService.findOne(sessionId).catch(() => {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    });
 
     if (
       session.userId !== userId ||
@@ -53,5 +58,17 @@ export class JwtRefreshStrategy extends PassportStrategy(
     });
 
     return { userId, sessionId, email };
+  }
+
+  private static getRefreshToken(req: Request): string | null {
+    const cookies = (req as RequestWithCookies).cookies;
+
+    if (!cookies || typeof cookies !== 'object') {
+      return null;
+    }
+
+    const refreshToken = (cookies as Record<string, unknown>).refreshToken;
+
+    return typeof refreshToken === 'string' ? refreshToken : null;
   }
 }

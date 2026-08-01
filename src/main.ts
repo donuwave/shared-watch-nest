@@ -29,7 +29,7 @@ async function bootstrap() {
   app.use(cookieParser());
 
   const configService = app.get(ConfigService);
-  const port = configService.get('PORT') || 3000;
+  const port = Number(configService.get<string>('PORT') ?? 3000);
 
   const rolesService = app.get(RoleService);
   await rolesService.seedDefaultRoles();
@@ -74,4 +74,4 @@ async function bootstrap() {
   await app.listen(port);
 }
 
-bootstrap();
+void bootstrap();

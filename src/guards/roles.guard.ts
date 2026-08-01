@@ -8,6 +8,12 @@ import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { UsersService } from '../entity/users/users.service';
 import { JwtPayload } from '../entity/auth/types/jwt-payload.types';
+import { Role } from '../entity/role/role.entity';
+
+type RoleRequest = {
+  user?: JwtPayload;
+  userRole?: Role;
+};
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -29,8 +35,8 @@ export class RolesGuard implements CanActivate {
     }
 
     // Получаем запрос
-    const request = context.switchToHttp().getRequest();
-    const userPayload = request.user as JwtPayload;
+    const request = context.switchToHttp().getRequest<RoleRequest>();
+    const userPayload = request.user;
 
     // Если нет пользователя в запросе — запрещаем
     if (!userPayload || !userPayload.userId) {

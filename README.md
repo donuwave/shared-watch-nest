@@ -25,6 +25,7 @@ Docker Compose >= 2.23
 
 - Приложение будет доступно на: http://localhost:9000
 - Swagger UI: http://localhost:9000/api
+- Frontend auth flow: [docs/frontend-auth.md](docs/frontend-auth.md)
 
 ```.env
 # База данных
@@ -48,6 +49,26 @@ JWT_REFRESH_EXPIRATION=30d
 COOKIE_SECURE=false
 COOKIE_SAME_SITE=lax
 COOKIE_DOMAIN=
+
+# GitHub OAuth
+GITHUB_CLIENT_ID=change_me
+GITHUB_CLIENT_SECRET=change_me
+GITHUB_CALLBACK_URL=http://localhost:9000/auth/github/callback
+
+# Google OAuth
+GOOGLE_CLIENT_ID=change_me
+GOOGLE_CLIENT_SECRET=change_me
+GOOGLE_CALLBACK_URL=http://localhost:9000/auth/google/callback
+
+# Yandex OAuth
+YANDEX_CLIENT_ID=change_me
+YANDEX_CLIENT_SECRET=change_me
+YANDEX_CALLBACK_URL=http://localhost:9000/auth/yandex/callback
+
+# VK OAuth
+VK_CLIENT_ID=change_me
+VK_CLIENT_SECRET=change_me
+VK_CALLBACK_URL=http://localhost:9000/auth/vk/callback
 
 # Почта
 APP_FRONTEND_URL=http://localhost:3000

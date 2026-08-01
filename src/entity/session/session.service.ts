@@ -31,8 +31,8 @@ export class SessionService {
   }
 
   async create(createdSession: CreateSessionDto): Promise<Session> {
-    const maxActiveSessions = await this.configService.get(
-      'MAX_SESSIONS_PER_USER',
+    const maxActiveSessions = Number(
+      this.configService.get<string>('MAX_SESSIONS_PER_USER') ?? 5,
     );
     const activeSessions = await this.getActiveSessionByUserId(
       createdSession.userId,
@@ -117,8 +117,9 @@ export class SessionService {
 
   //Вытащить функцию в отдельную утилит
   private calculateExpiration(): Date {
-    const expirationSeconds =
-      this.configService.get('app.sessionExpiration') || 604800;
+    const expirationSeconds = Number(
+      this.configService.get<string>('SESSION_EXPIRATION') ?? 604800,
+    );
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + expirationSeconds);
     return expiresAt;

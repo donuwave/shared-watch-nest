@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { CookieOptions, Response } from 'express';
@@ -15,6 +19,52 @@ import { VerifyEmailDto } from './dto/verify-email.dto';
 import { MailService } from '../../integrations/mail/mail.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { User } from '../users/users.entity';
+import type { OAuthProvider } from '../oauth-account/types/oauth-provider';
+import { OAuthAccountService } from '../oauth-account/oauth-account.service';
+import { createHash, randomBytes } from 'crypto';
+
+type VkOAuthCallbackInput = {
+  code?: string;
+  state?: string;
+  deviceId?: string;
+  cookies?: Record<string, string | undefined>;
+  userAgent: string;
+  ipAddress: string;
+  res: Response;
+};
+
+type CompleteOAuthLoginInput = {
+  provider: OAuthProvider;
+  user: User;
+  userAgent: string;
+  ipAddress: string;
+  res: Response;
+};
+
+type VkTokenResponse = {
+  access_token?: string;
+  expires_in?: number;
+  refresh_token?: string;
+  id_token?: string;
+  scope?: string;
+  token_type?: string;
+  error?: string;
+  error_description?: string;
+};
+
+type VkUserInfoResponse = {
+  user?: {
+    user_id?: string;
+    first_name?: string;
+    last_name?: string;
+    avatar?: string;
+    email?: string;
+  };
+  email?: string;
+  error?: string;
+  error_description?: string;
+};
 
 @Injectable()
 export class AuthService {
@@ -26,6 +76,7 @@ export class AuthService {
     private roleService: RoleService,
     private emailTokenService: EmailTokenService,
     private mailService: MailService,
+    private oauthAccountService: OAuthAccountService,
   ) {}
 
   async me(userId: string) {
@@ -119,6 +170,128 @@ export class AuthService {
       },
       res,
     );
+  }
+
+  async oauthLogin(
+    user: User,
+    userAgent: string,
+    ipAddress: string,
+    res: Response,
+  ): Promise<string> {
+    await this.ensureDefaultUserRole(user);
+
+    return await this.loginUser(
+      {
+        email: user.email,
+        userId: user.id,
+        userAgent,
+        ipAddress,
+        deviceInfo: this.getDeviceInfo(userAgent),
+      },
+      res,
+    );
+  }
+
+  async completeOAuthLogin({
+    provider,
+    user,
+    userAgent,
+    ipAddress,
+    res,
+  }: CompleteOAuthLoginInput): Promise<string> {
+    await this.oauthLogin(user, userAgent, ipAddress, res);
+
+    return this.getOAuthSuccessRedirectUrl(provider);
+  }
+
+  createOAuthState(provider: OAuthProvider, res: Response): string {
+    const state = this.generateOAuthRandomString(24);
+
+    res.cookie(
+      this.getOAuthStateCookieName(provider),
+      state,
+      this.getOAuthCookieOptions(),
+    );
+
+    return state;
+  }
+
+  consumeOAuthState(
+    provider: OAuthProvider,
+    state: string | undefined,
+    cookies: Record<string, string | undefined> | undefined,
+    res: Response,
+  ): void {
+    const cookieName = this.getOAuthStateCookieName(provider);
+    const expectedState = cookies?.[cookieName];
+
+    res.clearCookie(cookieName, this.getOAuthCookieClearOptions());
+
+    if (!state || !expectedState || state !== expectedState) {
+      throw new BadRequestException('Invalid OAuth state');
+    }
+  }
+
+  startVkOAuth(res: Response): string {
+    const state = this.createOAuthState('vk', res);
+    const codeVerifier = this.generateOAuthRandomString(64);
+    const codeChallenge = this.generateCodeChallenge(codeVerifier);
+
+    res.cookie(
+      'vkOAuthCodeVerifier',
+      codeVerifier,
+      this.getOAuthCookieOptions(),
+    );
+
+    const authUrl = new URL('https://id.vk.com/authorize');
+    authUrl.searchParams.set('response_type', 'code');
+    authUrl.searchParams.set(
+      'client_id',
+      this.configService.get<string>('VK_CLIENT_ID') ?? '',
+    );
+    authUrl.searchParams.set('redirect_uri', this.getVkCallbackUrl());
+    authUrl.searchParams.set('scope', 'vkid.personal_info email');
+    authUrl.searchParams.set('state', state);
+    authUrl.searchParams.set('code_challenge', codeChallenge);
+    authUrl.searchParams.set('code_challenge_method', 'S256');
+
+    return authUrl.toString();
+  }
+
+  async handleVkOAuthCallback({
+    code,
+    state,
+    deviceId,
+    cookies,
+    userAgent,
+    ipAddress,
+    res,
+  }: VkOAuthCallbackInput): Promise<string> {
+    const codeVerifier = cookies?.vkOAuthCodeVerifier;
+
+    res.clearCookie(
+      this.getOAuthStateCookieName('vk'),
+      this.getOAuthCookieClearOptions(),
+    );
+    res.clearCookie('vkOAuthCodeVerifier', this.getOAuthCookieClearOptions());
+
+    if (!code || !state || !deviceId || !codeVerifier) {
+      throw new BadRequestException('Invalid VK OAuth callback');
+    }
+
+    this.consumeOAuthState('vk', state, cookies, res);
+
+    const token = await this.exchangeVkCode(code, deviceId, codeVerifier);
+    const profile = await this.fetchVkProfile(token.access_token);
+    const user = await this.oauthAccountService.findOrCreateUser(profile);
+
+    return this.completeOAuthLogin({
+      provider: 'vk',
+      user,
+      userAgent,
+      ipAddress,
+      res,
+    });
   }
 
   async refreshTokens(userId: string, sessionId: string, email: string) {
@@ -239,6 +412,36 @@ export class AuthService {
     return accessToken;
   }
 
+  getOAuthSuccessRedirectUrl(provider: OAuthProvider): string {
+    const frontendUrl = this.configService.get<string>(
+      'APP_FRONTEND_URL',
+      'http://localhost:3000',
+    );
+    const redirectUrl = new URL('/oauth/callback', frontendUrl);
+
+    redirectUrl.searchParams.set('provider', provider);
+    redirectUrl.searchParams.set('status', 'success');
+
+    return redirectUrl.toString();
+  }
+
+  getOAuthErrorRedirectUrl(
+    provider: OAuthProvider,
+    code = 'oauth_failed',
+  ): string {
+    const frontendUrl = this.configService.get<string>(
+      'APP_FRONTEND_URL',
+      'http://localhost:3000',
+    );
+    const redirectUrl = new URL('/oauth/callback', frontendUrl);
+
+    redirectUrl.searchParams.set('provider', provider);
+    redirectUrl.searchParams.set('status', 'error');
+    redirectUrl.searchParams.set('code', code);
+
+    return redirectUrl.toString();
+  }
+
   //TODO: вытащить в стратегию (декоратор)
   async validateUser(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
@@ -262,6 +465,130 @@ export class AuthService {
       expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION') || '3600s',
       secret: this.configService.get('JWT_ACCESS_SECRET'),
     });
+  }
+
+  private async ensureDefaultUserRole(user: User): Promise<void> {
+    if (user.roleId) {
+      return;
+    }
+
+    const userRole = await this.roleService.findByName('user');
+
+    if (!userRole) {
+      return;
+    }
+
+    user.role = userRole;
+    await this.usersService.save(user);
+  }
+
+  private async exchangeVkCode(
+    code: string,
+    deviceId: string,
+    codeVerifier: string,
+  ): Promise<{ access_token: string }> {
+    const response = await fetch('https://id.vk.com/oauth2/auth', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: this.getVkCallbackUrl(),
+        client_id: this.configService.get<string>('VK_CLIENT_ID') ?? '',
+        client_secret: this.configService.get<string>('VK_CLIENT_SECRET') ?? '',
+        device_id: deviceId,
+        code_verifier: codeVerifier,
+      }),
+    });
+
+    const token = (await response.json()) as VkTokenResponse;
+
+    if (!response.ok || !token.access_token) {
+      throw new UnauthorizedException(
+        token.error_description ?? token.error ?? 'VK OAuth token failed',
+      );
+    }
+
+    return { access_token: token.access_token };
+  }
+
+  private async fetchVkProfile(accessToken: string) {
+    const response = await fetch('https://id.vk.com/oauth2/user_info', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: this.configService.get<string>('VK_CLIENT_ID') ?? '',
+        access_token: accessToken,
+      }),
+    });
+
+    const profile = (await response.json()) as VkUserInfoResponse;
+
+    if (!response.ok || !profile.user?.user_id || !profile.email) {
+      throw new UnauthorizedException(
+        profile.error_description ?? profile.error ?? 'VK profile failed',
+      );
+    }
+
+    return {
+      provider: 'vk' as const,
+      providerUserId: profile.user.user_id,
+      email: profile.email,
+      username: this.getVkUsername(profile),
+      avatarUrl: profile.user.avatar ?? null,
+      emailVerified: true,
+    };
+  }
+
+  private getVkUsername(profile: VkUserInfoResponse): string {
+    const fullName = [profile.user?.first_name, profile.user?.last_name]
+      .filter(Boolean)
+      .join('.');
+    const source = fullName || profile.email || 'vk-user';
+    const username = source
+      .replace(/\s+/g, '.')
+      .replace(/[^A-Za-z0-9_.-]/g, '')
+      .replace(/^[._-]+|[._-]+$/g, '')
+      .slice(0, 32);
+
+    return username.length >= 2 ? username : 'vk-user';
+  }
+
+  private getVkCallbackUrl(): string {
+    return (
+      this.configService.get<string>('VK_CALLBACK_URL') ??
+      'http://localhost:9000/auth/vk/callback'
+    );
+  }
+
+  private getOAuthStateCookieName(provider: OAuthProvider): string {
+    return `${provider}OAuthState`;
+  }
+
+  private generateOAuthRandomString(byteLength: number): string {
+    return randomBytes(byteLength).toString('base64url');
+  }
+
+  private generateCodeChallenge(codeVerifier: string): string {
+    return createHash('sha256').update(codeVerifier).digest('base64url');
+  }
+
+  private getOAuthCookieOptions(): CookieOptions {
+    return {
+      ...this.getOAuthCookieClearOptions(),
+      maxAge: 10 * 60 * 1000,
+    };
+  }
+
+  private getOAuthCookieClearOptions(): CookieOptions {
+    return {
+      ...this.getRefreshCookieClearOptions(),
+      httpOnly: true,
+    };
   }
 
   private generateRefreshToken(payload: any): string {
@@ -305,7 +632,10 @@ export class AuthService {
     return 'lax';
   }
 
-  private parseDurationMs(value: string | undefined, fallbackMs: number): number {
+  private parseDurationMs(
+    value: string | undefined,
+    fallbackMs: number,
+  ): number {
     if (!value) {
       return fallbackMs;
     }

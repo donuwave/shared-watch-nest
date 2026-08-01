@@ -3,7 +3,9 @@ import {
   Post,
   Body,
   Request,
+  Query,
   UseGuards,
+  UseFilters,
   Res,
   Get,
 } from '@nestjs/common';
@@ -27,6 +29,19 @@ import type { JwtPayload } from './types/jwt-payload.types';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { User } from '../users/users.entity';
+import type { OAuthProvider } from '../oauth-account/types/oauth-provider';
+import {
+  GitHubOAuthGuard,
+  GoogleOAuthGuard,
+  YandexOAuthGuard,
+} from '../../guards/oauth-state.guard';
+import { OAuthRedirectFilter } from '../../filters/oauth-redirect.filter';
+
+type OAuthRequest = ExpressRequest & { user: User };
+type CookieRequest = ExpressRequest & {
+  cookies?: Record<string, string | undefined>;
+};
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -160,5 +175,140 @@ export class AuthController {
   @ApiResponse({ status: 404, description: 'Пользователь не найден' })
   async me(@CurrentUser() user: JwtPayload) {
     return this.authService.me(user.userId);
+  }
+
+  @Get('google')
+  @UseGuards(GoogleOAuthGuard)
+  @ApiOperation({ summary: 'Начать авторизацию через Google' })
+  @ApiResponse({ status: 302, description: 'Редирект на Google OAuth' })
+  googleAuth(): void {
+    return;
+  }
+
+  @Get('google/callback')
+  @UseGuards(GoogleOAuthGuard)
+  @UseFilters(OAuthRedirectFilter)
+  @ApiOperation({ summary: 'Callback авторизации через Google' })
+  @ApiResponse({
+    status: 302,
+    description:
+      'Refresh cookie установлена, пользователь возвращен на frontend',
+  })
+  async googleCallback(
+    @Request() req: OAuthRequest,
+    @Res({ passthrough: false }) res: Response,
+  ) {
+    return this.redirectOAuthCallback('google', req, res);
+  }
+
+  @Get('github')
+  @UseGuards(GitHubOAuthGuard)
+  @ApiOperation({ summary: 'Начать авторизацию через GitHub' })
+  @ApiResponse({ status: 302, description: 'Редирект на GitHub OAuth' })
+  githubAuth(): void {
+    return;
+  }
+
+  @Get('github/callback')
+  @UseGuards(GitHubOAuthGuard)
+  @UseFilters(OAuthRedirectFilter)
+  @ApiOperation({ summary: 'Callback авторизации через GitHub' })
+  @ApiResponse({
+    status: 302,
+    description:
+      'Refresh cookie установлена, пользователь возвращен на frontend',
+  })
+  async githubCallback(
+    @Request() req: OAuthRequest,
+    @Res({ passthrough: false }) res: Response,
+  ) {
+    return this.redirectOAuthCallback('github', req, res);
+  }
+
+  @Get('yandex')
+  @UseGuards(YandexOAuthGuard)
+  @ApiOperation({ summary: 'Начать авторизацию через Yandex' })
+  @ApiResponse({ status: 302, description: 'Редирект на Yandex OAuth' })
+  yandexAuth(): void {
+    return;
+  }
+
+  @Get('yandex/callback')
+  @UseGuards(YandexOAuthGuard)
+  @UseFilters(OAuthRedirectFilter)
+  @ApiOperation({ summary: 'Callback авторизации через Yandex' })
+  @ApiResponse({
+    status: 302,
+    description:
+      'Refresh cookie установлена, пользователь возвращен на frontend',
+  })
+  async yandexCallback(
+    @Request() req: OAuthRequest,
+    @Res({ passthrough: false }) res: Response,
+  ) {
+    return this.redirectOAuthCallback('yandex', req, res);
+  }
+
+  @Get('vk')
+  @ApiOperation({ summary: 'Начать авторизацию через VK ID' })
+  @ApiResponse({ status: 302, description: 'Редирект на VK ID OAuth' })
+  vkAuth(@Res({ passthrough: false }) res: Response) {
+    return res.redirect(this.authService.startVkOAuth(res));
+  }
+
+  @Get('vk/callback')
+  @UseFilters(OAuthRedirectFilter)
+  @ApiOperation({ summary: 'Callback авторизации через VK ID' })
+  @ApiResponse({
+    status: 302,
+    description:
+      'Refresh cookie установлена, пользователь возвращен на frontend',
+  })
+  async vkCallback(
+    @Query('code') code: string | undefined,
+    @Query('state') state: string | undefined,
+    @Query('device_id') deviceId: string | undefined,
+    @Request() req: CookieRequest,
+    @Res({ passthrough: false }) res: Response,
+  ) {
+    const userAgent = req.headers['user-agent'] || '';
+    const ipAddress = req.ip || req.connection.remoteAddress || '';
+    try {
+      const redirectUrl = await this.authService.handleVkOAuthCallback({
+        code,
+        state,
+        deviceId,
+        cookies: req.cookies,
+        userAgent,
+        ipAddress,
+        res,
+      });
+
+      return res.redirect(redirectUrl);
+    } catch {
+      return res.redirect(this.authService.getOAuthErrorRedirectUrl('vk'));
+    }
+  }
+
+  private async redirectOAuthCallback(
+    provider: OAuthProvider,
+    req: OAuthRequest,
+    res: Response,
+  ) {
+    try {
+      const userAgent = req.headers['user-agent'] || '';
+      const ipAddress = req.ip || req.connection.remoteAddress || '';
+      const redirectUrl = await this.authService.completeOAuthLogin({
+        provider,
+        user: req.user,
+        userAgent,
+        ipAddress,
+        res,
+      });
+
+      return res.redirect(redirectUrl);
+    } catch {
+      return res.redirect(this.authService.getOAuthErrorRedirectUrl(provider));
+    }
   }
 }

@@ -14,6 +14,13 @@ import { UpdateUserDto } from './dto/update.dto';
 import { ChangePasswordDto } from './dto/updatePassword.dto';
 import { EmailVerification } from './types/email-verification.types';
 
+type CreateOAuthUserInput = {
+  email: string;
+  username: string;
+  avatarUrl?: string | null;
+  isEmailVerified: boolean;
+};
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -42,6 +49,32 @@ export class UsersService {
       blocked: false,
       emailVerifiedAt: null,
       emailVerificationDeadlineAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    });
+
+    return await this.usersRepository.save(user);
+  }
+
+  async createOAuthUser(createdUser: CreateOAuthUserInput): Promise<User> {
+    const existingUser = await this.usersRepository.findOne({
+      where: { email: createdUser.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Пользователь с таким email уже создан');
+    }
+
+    const user = this.usersRepository.create({
+      email: createdUser.email,
+      password: '',
+      username: createdUser.username,
+      discriminator: await this.generateDiscriminator(createdUser.username),
+      avatarUrl: createdUser.avatarUrl ?? null,
+      isEmailVerified: createdUser.isEmailVerified,
+      blocked: false,
+      emailVerifiedAt: createdUser.isEmailVerified ? new Date() : null,
+      emailVerificationDeadlineAt: createdUser.isEmailVerified
+        ? null
+        : new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
 
     return await this.usersRepository.save(user);

@@ -26,7 +26,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   //TODO: сделать проверку на сессии или давать 401
-  async validate(payload: JwtPayload): Promise<JwtPayload> {
+  validate(payload: JwtPayload): JwtPayload {
     return {
       userId: payload.userId,
       sessionId: payload.sessionId,
