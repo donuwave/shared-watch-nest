@@ -6,6 +6,7 @@ import { SessionModule } from './entity/session/session.module';
 import { AuthModule } from './entity/auth/auth.module';
 import { RoleModule } from './entity/role/role.module';
 import { OAuthAccountModule } from './entity/oauth-account/oauth-account.module';
+import { FeatureModule } from './entity/feature/feature.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { OAuthAccountModule } from './entity/oauth-account/oauth-account.module'
     AuthModule,
     RoleModule,
     OAuthAccountModule,
+    FeatureModule,
   ],
   controllers: [],
   providers: [],

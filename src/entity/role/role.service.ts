@@ -8,6 +8,7 @@ import { Role } from './role.entity';
 import { Repository } from 'typeorm';
 import { CreateRoleDto } from './dto/create.dto';
 import { UpdateRoleDto } from './dto/update.dto';
+import { GLOBAL_ROLES } from './types/global-role';
 
 @Injectable()
 export class RoleService {
@@ -28,7 +29,7 @@ export class RoleService {
     });
   }
 
-  async finOne(id: string): Promise<Role> {
+  async findOne(id: string): Promise<Role> {
     const role = await this.roleRepository.findOne({ where: { id } });
 
     if (!role) {
@@ -56,13 +57,26 @@ export class RoleService {
   }
 
   async remove(id: string): Promise<void> {
-    const role = await this.finOne(id);
+    const role = await this.findOne(id);
+
+    if (GLOBAL_ROLES.includes(role.name as (typeof GLOBAL_ROLES)[number])) {
+      throw new ConflictException('Базовую роль нельзя удалить');
+    }
+
     role.isActive = false;
     await this.roleRepository.save(role);
   }
 
   async update(id: string, updateRoleDto: UpdateRoleDto): Promise<Role> {
-    const role = await this.finOne(id);
+    const role = await this.findOne(id);
+
+    if (
+      updateRoleDto.name &&
+      GLOBAL_ROLES.includes(role.name as (typeof GLOBAL_ROLES)[number]) &&
+      updateRoleDto.name !== role.name
+    ) {
+      throw new ConflictException('Имя базовой роли нельзя изменить');
+    }
 
     Object.assign(role, updateRoleDto);
 

@@ -9,6 +9,7 @@ import { ROLES_KEY } from '../decorators/roles.decorator';
 import { UsersService } from '../entity/users/users.service';
 import { JwtPayload } from '../entity/auth/types/jwt-payload.types';
 import { Role } from '../entity/role/role.entity';
+import type { GlobalRoleName } from '../entity/role/types/global-role';
 
 type RoleRequest = {
   user?: JwtPayload;
@@ -24,7 +25,7 @@ export class RolesGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Получаем разрешённые роли из декоратора @Roles()
-    const requiredRoles = this.reflector.get<string[]>(
+    const requiredRoles = this.reflector.get<GlobalRoleName[]>(
       ROLES_KEY,
       context.getHandler(),
     );
@@ -52,7 +53,7 @@ export class RolesGuard implements CanActivate {
     }
 
     // Проверяем, есть ли у пользователя нужная роль
-    const hasRole = requiredRoles.includes(user.role.name);
+    const hasRole = requiredRoles.some((role) => role === user.role?.name);
 
     if (!hasRole) {
       throw new ForbiddenException('Insufficient permissions');
