@@ -135,6 +135,13 @@ export class UsersService {
     return await this.usersRepository.save(user);
   }
 
+  async resetPassword(id: string, newPassword: string): Promise<User> {
+    const user = await this.findOne(id);
+    user.password = await bcrypt.hash(newPassword, 10);
+
+    return await this.usersRepository.save(user);
+  }
+
   async save(user: User): Promise<User> {
     return await this.usersRepository.save(user);
   }

@@ -44,6 +44,38 @@ export class MailService {
     });
   }
 
+  async sendPasswordReset(email: string, token: string): Promise<void> {
+    const link = this.buildPasswordResetLink(token);
+
+    if (!this.isSmtpConfigured()) {
+      console.log({
+        type: 'password_reset',
+        mode: 'log_only',
+        email,
+        link,
+      });
+
+      return;
+    }
+
+    await this.sendMail({
+      to: email,
+      subject: 'Сброс пароля в Shared Watch',
+      text: [
+        'Вы запросили сброс пароля в Shared Watch.',
+        '',
+        `Ссылка для сброса пароля: ${link}`,
+        '',
+        'Если вы не запрашивали сброс пароля, просто проигнорируйте это письмо.',
+      ].join('\n'),
+      html: [
+        '<p>Вы запросили сброс пароля в Shared Watch.</p>',
+        `<p><a href="${link}">Сбросить пароль</a></p>`,
+        '<p>Если вы не запрашивали сброс пароля, просто проигнорируйте это письмо.</p>',
+      ].join(''),
+    });
+  }
+
   async sendTestEmail(email: string): Promise<{ mode: 'smtp' | 'log_only' }> {
     if (!this.isSmtpConfigured()) {
       console.log({
@@ -99,11 +131,19 @@ export class MailService {
   }
 
   private buildEmailVerificationLink(token: string): string {
+    return this.buildFrontendLink('/verify-email', token);
+  }
+
+  private buildPasswordResetLink(token: string): string {
+    return this.buildFrontendLink('/reset-password', token);
+  }
+
+  private buildFrontendLink(path: string, token: string): string {
     const frontendUrl = this.configService.get<string>(
       'APP_FRONTEND_URL',
       'http://localhost:3000',
     );
-    const url = new URL('/verify-email', frontendUrl);
+    const url = new URL(path, frontendUrl);
     url.searchParams.set('token', token);
 
     return url.toString();

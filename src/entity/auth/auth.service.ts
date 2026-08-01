@@ -13,6 +13,8 @@ import { RoleService } from '../role/role.service';
 import { EmailTokenService } from '../email-token/email-token.service';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { MailService } from '../../integrations/mail/mail.service';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -176,6 +178,38 @@ export class AuthService {
 
     return {
       message: 'Email verification token created',
+    };
+  }
+
+  async forgotPassword({ email }: ForgotPasswordDto) {
+    const user = await this.usersService.findByEmail(email).catch(() => null);
+
+    if (user) {
+      const passwordResetToken = await this.emailTokenService.createToken(
+        user.id,
+        'password_change',
+      );
+
+      await this.mailService.sendPasswordReset(user.email, passwordResetToken);
+    }
+
+    return {
+      message:
+        'If an account with this email exists, password reset instructions have been sent',
+    };
+  }
+
+  async resetPassword({ token, newPassword }: ResetPasswordDto) {
+    const emailToken = await this.emailTokenService.verifyToken(
+      token,
+      'password_change',
+    );
+
+    await this.usersService.resetPassword(emailToken.userId, newPassword);
+    await this.sessionsService.terminateAll(emailToken.userId);
+
+    return {
+      message: 'Password reset successfully',
     };
   }
 

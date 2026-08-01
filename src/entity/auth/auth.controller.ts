@@ -25,6 +25,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from '../../decorators/current-user.decorator';
 import type { JwtPayload } from './types/jwt-payload.types';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -104,6 +106,28 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Не авторизован' })
   async resendEmailVerification(@CurrentUser() user: JwtPayload) {
     return this.authService.resendEmailVerification(user.userId);
+  }
+
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Запросить ссылку для сброса пароля' })
+  @ApiResponse({
+    status: 201,
+    description: 'Если email существует, ссылка для сброса отправлена',
+  })
+  @ApiResponse({ status: 400, description: 'Невалидные данные' })
+  @ApiBody({ type: ForgotPasswordDto })
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto);
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Сбросить пароль по token из письма' })
+  @ApiResponse({ status: 201, description: 'Пароль успешно сброшен' })
+  @ApiResponse({ status: 400, description: 'Токен уже использован или истек' })
+  @ApiResponse({ status: 404, description: 'Токен не найден' })
+  @ApiBody({ type: ResetPasswordDto })
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetPasswordDto);
   }
 
   @Post('logout')
