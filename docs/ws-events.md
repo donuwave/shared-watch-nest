@@ -16,8 +16,7 @@ io('http://localhost:9000/rooms', {
 });
 ```
 
-События разделены по доменам. Сейчас есть `Room Presence` и `Video Sync`;
-следующими отдельными разделами будут `Chat` и `Voice`.
+События разделены по доменам: `Room Presence`, `Video Sync`, `Chat`, `Voice`.
 
 ## Room Presence
 
@@ -223,4 +222,139 @@ socket.on('chat:typing', ({ roomId, userId, isTyping, ts }) => {});
 
 ```ts
 socket.on('chat:read', (readState) => {});
+```
+
+## Voice
+
+Перед voice events клиент должен выполнить `room:join`.
+
+### voice:join
+
+Событие от клиента. Нужен активный участник комнаты.
+
+```ts
+socket.emit('voice:join', { roomId });
+```
+
+### voice:leave
+
+Событие от клиента. Нужен активный участник комнаты.
+
+```ts
+socket.emit('voice:leave', { roomId });
+```
+
+### voice:offer
+
+Событие от клиента. Нужен активный участник комнаты.
+
+```ts
+socket.emit('voice:offer', { roomId, targetUserId, signal });
+```
+
+### voice:answer
+
+Событие от клиента. Нужен активный участник комнаты.
+
+```ts
+socket.emit('voice:answer', { roomId, targetUserId, signal });
+```
+
+### voice:ice-candidate
+
+Событие от клиента. Нужен активный участник комнаты.
+
+```ts
+socket.emit('voice:ice-candidate', { roomId, targetUserId, candidate });
+```
+
+### voice:mute
+
+Событие от клиента. Сейчас это только self mute/unmute.
+
+```ts
+socket.emit('voice:mute', { roomId, isMuted: true });
+```
+
+### voice:mute-participant
+
+Событие от клиента. Доступно только `owner` комнаты.
+
+```ts
+socket.emit('voice:mute-participant', { roomId, targetUserId, isMuted: true });
+```
+
+### voice:speaking
+
+Событие от клиента. Фронт сам анализирует локальный микрофон.
+
+```ts
+socket.emit('voice:speaking', { roomId, isSpeaking: true, audioLevel: 0.72 });
+```
+
+### voice:joined
+
+Событие от сервера для остальных участников комнаты.
+
+```ts
+socket.on('voice:joined', ({ roomId, userId }) => {});
+```
+
+### voice:left
+
+Событие от сервера для остальных участников комнаты.
+
+```ts
+socket.on('voice:left', ({ roomId, userId }) => {});
+```
+
+### voice:offer
+
+Событие от сервера для `targetUserId`.
+
+```ts
+socket.on('voice:offer', ({ roomId, fromUserId, signal }) => {});
+```
+
+### voice:answer
+
+Событие от сервера для `targetUserId`.
+
+```ts
+socket.on('voice:answer', ({ roomId, fromUserId, signal }) => {});
+```
+
+### voice:ice-candidate
+
+Событие от сервера для `targetUserId`.
+
+```ts
+socket.on('voice:ice-candidate', ({ roomId, fromUserId, candidate }) => {});
+```
+
+### voice:mute
+
+Событие от сервера для участников комнаты.
+
+```ts
+socket.on('voice:mute', ({ roomId, userId, isMuted }) => {});
+```
+
+### voice:participant-muted
+
+Событие от сервера для участников комнаты.
+
+```ts
+socket.on(
+  'voice:participant-muted',
+  ({ roomId, targetUserId, mutedByUserId, isMuted }) => {},
+);
+```
+
+### voice:speaking
+
+Событие от сервера для остальных участников комнаты.
+
+```ts
+socket.on('voice:speaking', ({ roomId, userId, isSpeaking, audioLevel, ts }) => {});
 ```

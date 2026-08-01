@@ -11,6 +11,7 @@ import { RoomModule } from './entity/room/room.module';
 import { VideoSyncModule } from './entity/video-sync/video-sync.module';
 import { RealtimeApiModule } from './realtime-api/realtime-api.module';
 import { ChatModule } from './entity/chat/chat.module';
+import { VoiceModule } from './entity/voice/voice.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ChatModule } from './entity/chat/chat.module';
     RoomModule,
     VideoSyncModule,
     ChatModule,
+    VoiceModule,
     RealtimeApiModule,
   ],
   controllers: [],

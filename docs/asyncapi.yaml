@@ -10,9 +10,9 @@ tags:
   - name: Video Sync
     description: Источник видео, play/pause/seek и восстановление состояния видео.
   - name: Chat
-    description: Будущие события текстового чата.
+    description: События текстового чата.
   - name: Voice
-    description: Будущие события голосовой связи и WebRTC-сигналинга.
+    description: События голосовой связи и WebRTC-сигналинга.
 servers:
   local:
     url: http://localhost:9000/rooms
@@ -259,6 +259,167 @@ channels:
     x-socket-namespace: /rooms
     x-ack:
       $ref: '#/components/schemas/ChatReadStateAck'
+  voice:join:
+    description: Клиент подключается к голосовой связи комнаты.
+    publish:
+      operationId: joinVoice
+      summary: Подключиться к голосовой связи.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceRoom'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/OkRoomAck'
+  voice:leave:
+    description: Клиент выходит из голосовой связи комнаты.
+    publish:
+      operationId: leaveVoice
+      summary: Выйти из голосовой связи.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceRoom'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/OkRoomAck'
+  voice:joined:
+    description: Сервер сообщает остальным участникам, что пользователь подключился к голосу.
+    subscribe:
+      operationId: voiceJoined
+      summary: Получить событие подключения к голосу.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceUserEvent'
+    x-socket-namespace: /rooms
+  voice:left:
+    description: Сервер сообщает остальным участникам, что пользователь вышел из голоса.
+    subscribe:
+      operationId: voiceLeft
+      summary: Получить событие выхода из голоса.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceUserEvent'
+    x-socket-namespace: /rooms
+  voice:offer:
+    description: Клиент отправляет WebRTC offer, сервер пересылает его targetUserId.
+    publish:
+      operationId: sendVoiceOffer
+      summary: Отправить WebRTC offer.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceSignal'
+    subscribe:
+      operationId: receiveVoiceOffer
+      summary: Получить WebRTC offer.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceSignalEvent'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/OkAck'
+  voice:answer:
+    description: Клиент отправляет WebRTC answer, сервер пересылает его targetUserId.
+    publish:
+      operationId: sendVoiceAnswer
+      summary: Отправить WebRTC answer.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceSignal'
+    subscribe:
+      operationId: receiveVoiceAnswer
+      summary: Получить WebRTC answer.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceSignalEvent'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/OkAck'
+  voice:ice-candidate:
+    description: Клиент отправляет ICE candidate, сервер пересылает его targetUserId.
+    publish:
+      operationId: sendVoiceIceCandidate
+      summary: Отправить ICE candidate.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceIceCandidate'
+    subscribe:
+      operationId: receiveVoiceIceCandidate
+      summary: Получить ICE candidate.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceIceCandidateEvent'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/OkAck'
+  voice:mute:
+    description: Клиент сообщает self mute/unmute, сервер рассылает статус участникам комнаты.
+    publish:
+      operationId: sendVoiceMute
+      summary: Отправить self mute/unmute.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceMute'
+    subscribe:
+      operationId: receiveVoiceMute
+      summary: Получить mute status.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceMuteEvent'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/OkAck'
+  voice:mute-participant:
+    description: Owner комнаты мутит или размучивает участника. Backend отправляет событие, фронт применяет mute.
+    publish:
+      operationId: muteVoiceParticipant
+      summary: Замутить или размутить участника.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceMuteParticipant'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/OkAck'
+  voice:participant-muted:
+    description: Сервер сообщает участникам комнаты, что owner изменил mute-state участника.
+    subscribe:
+      operationId: voiceParticipantMuted
+      summary: Получить mute-state участника.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceParticipantMuted'
+    x-socket-namespace: /rooms
+  voice:speaking:
+    description: Клиент сообщает, говорит ли пользователь сейчас. Сервер пересылает это другим участникам комнаты.
+    publish:
+      operationId: sendVoiceSpeaking
+      summary: Отправить speaking indicator.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceSpeaking'
+    subscribe:
+      operationId: receiveVoiceSpeaking
+      summary: Получить speaking indicator.
+      tags:
+        - name: Voice
+      message:
+        $ref: '#/components/messages/VoiceSpeakingEvent'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/OkAck'
 components:
   securitySchemes:
     accessToken:
@@ -338,6 +499,54 @@ components:
       name: chat:read
       payload:
         $ref: '#/components/schemas/ChatReadState'
+    VoiceRoom:
+      name: voice:room
+      payload:
+        $ref: '#/components/schemas/VoiceRoomPayload'
+    VoiceUserEvent:
+      name: voice:user-event
+      payload:
+        $ref: '#/components/schemas/VoiceUserEvent'
+    VoiceSignal:
+      name: voice:signal
+      payload:
+        $ref: '#/components/schemas/VoiceSignalPayload'
+    VoiceSignalEvent:
+      name: voice:signal-event
+      payload:
+        $ref: '#/components/schemas/VoiceSignalEvent'
+    VoiceIceCandidate:
+      name: voice:ice-candidate
+      payload:
+        $ref: '#/components/schemas/VoiceIceCandidatePayload'
+    VoiceIceCandidateEvent:
+      name: voice:ice-candidate-event
+      payload:
+        $ref: '#/components/schemas/VoiceIceCandidateEvent'
+    VoiceMute:
+      name: voice:mute
+      payload:
+        $ref: '#/components/schemas/VoiceMutePayload'
+    VoiceMuteEvent:
+      name: voice:mute-event
+      payload:
+        $ref: '#/components/schemas/VoiceMuteEvent'
+    VoiceMuteParticipant:
+      name: voice:mute-participant
+      payload:
+        $ref: '#/components/schemas/VoiceMuteParticipantPayload'
+    VoiceParticipantMuted:
+      name: voice:participant-muted
+      payload:
+        $ref: '#/components/schemas/VoiceParticipantMutedEvent'
+    VoiceSpeaking:
+      name: voice:speaking
+      payload:
+        $ref: '#/components/schemas/VoiceSpeakingPayload'
+    VoiceSpeakingEvent:
+      name: voice:speaking
+      payload:
+        $ref: '#/components/schemas/VoiceSpeakingEvent'
   schemas:
     Uuid:
       type: string
@@ -625,6 +834,183 @@ components:
           format: date-time
         user:
           $ref: '#/components/schemas/UserSnapshot'
+    VoiceRoomPayload:
+      type: object
+      required:
+        - roomId
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+    VoiceUserEvent:
+      type: object
+      required:
+        - roomId
+        - userId
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        userId:
+          $ref: '#/components/schemas/Uuid'
+    VoiceSignalPayload:
+      type: object
+      required:
+        - roomId
+        - targetUserId
+        - signal
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        targetUserId:
+          $ref: '#/components/schemas/Uuid'
+        signal:
+          type: object
+          additionalProperties: true
+    VoiceSignalEvent:
+      type: object
+      required:
+        - roomId
+        - fromUserId
+        - signal
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        fromUserId:
+          $ref: '#/components/schemas/Uuid'
+        signal:
+          type: object
+          additionalProperties: true
+    VoiceIceCandidatePayload:
+      type: object
+      required:
+        - roomId
+        - targetUserId
+        - candidate
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        targetUserId:
+          $ref: '#/components/schemas/Uuid'
+        candidate:
+          type: object
+          additionalProperties: true
+    VoiceIceCandidateEvent:
+      type: object
+      required:
+        - roomId
+        - fromUserId
+        - candidate
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        fromUserId:
+          $ref: '#/components/schemas/Uuid'
+        candidate:
+          type: object
+          additionalProperties: true
+    VoiceMutePayload:
+      type: object
+      required:
+        - roomId
+        - isMuted
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        isMuted:
+          type: boolean
+          example: true
+    VoiceMuteEvent:
+      type: object
+      required:
+        - roomId
+        - userId
+        - isMuted
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        userId:
+          $ref: '#/components/schemas/Uuid'
+        isMuted:
+          type: boolean
+          example: true
+    VoiceMuteParticipantPayload:
+      type: object
+      required:
+        - roomId
+        - targetUserId
+        - isMuted
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        targetUserId:
+          $ref: '#/components/schemas/Uuid'
+        isMuted:
+          type: boolean
+          example: true
+    VoiceParticipantMutedEvent:
+      type: object
+      required:
+        - roomId
+        - targetUserId
+        - mutedByUserId
+        - isMuted
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        targetUserId:
+          $ref: '#/components/schemas/Uuid'
+        mutedByUserId:
+          $ref: '#/components/schemas/Uuid'
+        isMuted:
+          type: boolean
+          example: true
+    VoiceSpeakingPayload:
+      type: object
+      required:
+        - roomId
+        - isSpeaking
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        isSpeaking:
+          type: boolean
+          example: true
+        audioLevel:
+          type: number
+          minimum: 0
+          maximum: 1
+          nullable: true
+          example: 0.72
+    VoiceSpeakingEvent:
+      type: object
+      required:
+        - roomId
+        - userId
+        - isSpeaking
+        - audioLevel
+        - ts
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        userId:
+          $ref: '#/components/schemas/Uuid'
+        isSpeaking:
+          type: boolean
+          example: true
+        audioLevel:
+          type: number
+          minimum: 0
+          maximum: 1
+          nullable: true
+          example: 0.72
+        ts:
+          type: string
+          format: date-time
     OkAck:
       type: object
       required:
