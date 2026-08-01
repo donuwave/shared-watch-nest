@@ -258,3 +258,5 @@ Video playback sync is documented separately in `docs/video-sync-api.md`.
 Room chat is documented separately in `docs/chat-api.md`.
 
 Whiteboard поверх стоп-кадра описан отдельно в `docs/whiteboard-api.md`.
+
+Проверки прав внутри комнаты описаны отдельно в `docs/room-permissions.md`.

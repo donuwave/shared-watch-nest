@@ -60,12 +60,14 @@ moderator
 member
 ```
 
-Planned mapping:
+Current mapping:
 
 - `owner` - room creator, full control inside room.
 - `moderator` - can help manage room participants and chat.
 - `member` - regular participant.
 
-Room roles will live in `room_participants.role` when rooms are implemented.
+Room roles live in `room_participants.role`.
 
 The creator of a room must become `owner` automatically.
+
+Detailed room permission checks are documented in `docs/room-permissions.md`.
