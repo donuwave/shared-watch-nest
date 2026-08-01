@@ -13,6 +13,7 @@ import { RoomCleanupService } from './room-cleanup.service';
 import { RoomPresenceGateway } from './gateways/room-presence.gateway';
 import { RoomStateService } from './room-state.service';
 import { VideoState } from '../video-sync/video-state.entity';
+import { WhiteboardState } from '../whiteboard/whiteboard-state.entity';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { VideoState } from '../video-sync/video-state.entity';
       RoomInvite,
       RoomPresence,
       VideoState,
+      WhiteboardState,
     ]),
     UsersModule,
     FeatureModule,

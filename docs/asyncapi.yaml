@@ -2,7 +2,7 @@ asyncapi: '2.6.0'
 info:
   title: Shared Watch Realtime API
   version: '1.0.0'
-  description: Socket.IO события для presence комнат и синхронизации видео.
+  description: Socket.IO события для realtime-доменов Shared Watch.
 defaultContentType: application/json
 tags:
   - name: Room Presence
@@ -13,6 +13,8 @@ tags:
     description: События текстового чата.
   - name: Voice
     description: События голосовой связи и WebRTC-сигналинга.
+  - name: Whiteboard
+    description: Режим рисования поверх стоп-кадра видео.
 servers:
   local:
     url: http://localhost:9000/rooms
@@ -420,6 +422,109 @@ channels:
     x-socket-namespace: /rooms
     x-ack:
       $ref: '#/components/schemas/OkAck'
+  whiteboard:enable:
+    description: Клиент включает whiteboard. Нужна room role owner или moderator, видео должно быть на паузе.
+    publish:
+      operationId: enableWhiteboard
+      summary: Включить whiteboard.
+      tags:
+        - name: Whiteboard
+      message:
+        $ref: '#/components/messages/WhiteboardRoom'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/WhiteboardStateAck'
+  whiteboard:disable:
+    description: Клиент выключает whiteboard. Нужна room role owner или moderator.
+    publish:
+      operationId: disableWhiteboard
+      summary: Выключить whiteboard.
+      tags:
+        - name: Whiteboard
+      message:
+        $ref: '#/components/messages/WhiteboardRoom'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/WhiteboardStateAck'
+  whiteboard:clear:
+    description: Клиент очищает whiteboard snapshot. Нужна room role owner или moderator.
+    publish:
+      operationId: clearWhiteboard
+      summary: Очистить whiteboard.
+      tags:
+        - name: Whiteboard
+      message:
+        $ref: '#/components/messages/WhiteboardRoom'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/WhiteboardStateAck'
+  whiteboard:state:
+    description: Сервер отправляет участникам комнаты состояние whiteboard после enable, disable или clear.
+    subscribe:
+      operationId: whiteboardStateChanged
+      summary: Получить состояние whiteboard.
+      tags:
+        - name: Whiteboard
+      message:
+        $ref: '#/components/messages/WhiteboardState'
+    x-socket-namespace: /rooms
+  whiteboard:stroke-start:
+    description: Клиент начинает stroke, сервер пересылает событие остальным участникам комнаты.
+    publish:
+      operationId: startWhiteboardStroke
+      summary: Начать whiteboard stroke.
+      tags:
+        - name: Whiteboard
+      message:
+        $ref: '#/components/messages/WhiteboardStrokeStart'
+    subscribe:
+      operationId: receiveWhiteboardStrokeStart
+      summary: Получить начало whiteboard stroke.
+      tags:
+        - name: Whiteboard
+      message:
+        $ref: '#/components/messages/WhiteboardStrokeStartEvent'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/WhiteboardStrokeStartAck'
+  whiteboard:stroke-append:
+    description: Клиент отправляет новые точки stroke, сервер пересылает событие остальным участникам комнаты.
+    publish:
+      operationId: appendWhiteboardStroke
+      summary: Передать точки whiteboard stroke.
+      tags:
+        - name: Whiteboard
+      message:
+        $ref: '#/components/messages/WhiteboardStrokeAppend'
+    subscribe:
+      operationId: receiveWhiteboardStrokeAppend
+      summary: Получить точки whiteboard stroke.
+      tags:
+        - name: Whiteboard
+      message:
+        $ref: '#/components/messages/WhiteboardStrokeAppendEvent'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/WhiteboardStrokeAppendAck'
+  whiteboard:stroke-end:
+    description: Клиент завершает stroke, backend сохраняет его в snapshot и рассылает финальный stroke участникам комнаты.
+    publish:
+      operationId: endWhiteboardStroke
+      summary: Завершить whiteboard stroke.
+      tags:
+        - name: Whiteboard
+      message:
+        $ref: '#/components/messages/WhiteboardStrokeEnd'
+    subscribe:
+      operationId: receiveWhiteboardStrokeEnd
+      summary: Получить завершенный whiteboard stroke.
+      tags:
+        - name: Whiteboard
+      message:
+        $ref: '#/components/messages/WhiteboardStrokeEndEvent'
+    x-socket-namespace: /rooms
+    x-ack:
+      $ref: '#/components/schemas/WhiteboardStrokeEndAck'
 components:
   securitySchemes:
     accessToken:
@@ -547,6 +652,38 @@ components:
       name: voice:speaking
       payload:
         $ref: '#/components/schemas/VoiceSpeakingEvent'
+    WhiteboardRoom:
+      name: whiteboard:room
+      payload:
+        $ref: '#/components/schemas/WhiteboardRoomPayload'
+    WhiteboardState:
+      name: whiteboard:state
+      payload:
+        $ref: '#/components/schemas/WhiteboardState'
+    WhiteboardStrokeStart:
+      name: whiteboard:stroke-start
+      payload:
+        $ref: '#/components/schemas/WhiteboardStrokeStartPayload'
+    WhiteboardStrokeStartEvent:
+      name: whiteboard:stroke-start
+      payload:
+        $ref: '#/components/schemas/WhiteboardStrokeStartEvent'
+    WhiteboardStrokeAppend:
+      name: whiteboard:stroke-append
+      payload:
+        $ref: '#/components/schemas/WhiteboardStrokeAppendPayload'
+    WhiteboardStrokeAppendEvent:
+      name: whiteboard:stroke-append
+      payload:
+        $ref: '#/components/schemas/WhiteboardStrokeAppendEvent'
+    WhiteboardStrokeEnd:
+      name: whiteboard:stroke-end
+      payload:
+        $ref: '#/components/schemas/WhiteboardStrokeEndPayload'
+    WhiteboardStrokeEndEvent:
+      name: whiteboard:stroke-end
+      payload:
+        $ref: '#/components/schemas/WhiteboardStrokeEndEvent'
   schemas:
     Uuid:
       type: string
@@ -610,6 +747,256 @@ components:
           $ref: '#/components/schemas/Uuid'
         userId:
           $ref: '#/components/schemas/Uuid'
+    WhiteboardRoomPayload:
+      type: object
+      required:
+        - roomId
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+    WhiteboardState:
+      type: object
+      required:
+        - id
+        - roomId
+        - enabled
+        - snapshot
+        - updatedByUserId
+        - createdAt
+        - updatedAt
+      additionalProperties: false
+      properties:
+        id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        enabled:
+          type: boolean
+          example: true
+        snapshot:
+          $ref: '#/components/schemas/WhiteboardSnapshot'
+        updatedByUserId:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        createdAt:
+          oneOf:
+            - type: string
+              format: date-time
+            - type: 'null'
+        updatedAt:
+          oneOf:
+            - type: string
+              format: date-time
+            - type: 'null'
+    WhiteboardSnapshot:
+      type: object
+      required:
+        - strokes
+      additionalProperties: false
+      properties:
+        strokes:
+          type: array
+          items:
+            $ref: '#/components/schemas/WhiteboardStroke'
+    WhiteboardPoint:
+      type: object
+      required:
+        - x
+        - y
+      additionalProperties: false
+      properties:
+        x:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.42
+        y:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.31
+        pressure:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.8
+    WhiteboardStroke:
+      type: object
+      required:
+        - id
+        - userId
+        - color
+        - width
+        - points
+        - createdAt
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        userId:
+          $ref: '#/components/schemas/Uuid'
+        color:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+          example: '#ffcc00'
+        width:
+          type: number
+          minimum: 1
+          maximum: 48
+          example: 4
+        points:
+          type: array
+          minItems: 1
+          maxItems: 10000
+          items:
+            $ref: '#/components/schemas/WhiteboardPoint'
+        createdAt:
+          type: string
+          format: date-time
+    WhiteboardStrokeStartPayload:
+      type: object
+      required:
+        - roomId
+        - strokeId
+        - color
+        - width
+        - point
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        strokeId:
+          $ref: '#/components/schemas/Uuid'
+        color:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+          example: '#ffcc00'
+        width:
+          type: number
+          minimum: 1
+          maximum: 48
+          example: 4
+        point:
+          $ref: '#/components/schemas/WhiteboardPoint'
+    WhiteboardStrokeStartEvent:
+      type: object
+      required:
+        - roomId
+        - strokeId
+        - userId
+        - color
+        - width
+        - point
+        - ts
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        strokeId:
+          $ref: '#/components/schemas/Uuid'
+        userId:
+          $ref: '#/components/schemas/Uuid'
+        color:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+          example: '#ffcc00'
+        width:
+          type: number
+          minimum: 1
+          maximum: 48
+          example: 4
+        point:
+          $ref: '#/components/schemas/WhiteboardPoint'
+        ts:
+          type: string
+          format: date-time
+    WhiteboardStrokeAppendPayload:
+      type: object
+      required:
+        - roomId
+        - strokeId
+        - points
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        strokeId:
+          $ref: '#/components/schemas/Uuid'
+        points:
+          type: array
+          minItems: 1
+          maxItems: 256
+          items:
+            $ref: '#/components/schemas/WhiteboardPoint'
+    WhiteboardStrokeAppendEvent:
+      type: object
+      required:
+        - roomId
+        - strokeId
+        - userId
+        - points
+        - ts
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        strokeId:
+          $ref: '#/components/schemas/Uuid'
+        userId:
+          $ref: '#/components/schemas/Uuid'
+        points:
+          type: array
+          minItems: 1
+          maxItems: 256
+          items:
+            $ref: '#/components/schemas/WhiteboardPoint'
+        ts:
+          type: string
+          format: date-time
+    WhiteboardStrokeEndPayload:
+      type: object
+      required:
+        - roomId
+        - strokeId
+        - color
+        - width
+        - points
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        strokeId:
+          $ref: '#/components/schemas/Uuid'
+        color:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+          example: '#ffcc00'
+        width:
+          type: number
+          minimum: 1
+          maximum: 48
+          example: 4
+        points:
+          type: array
+          minItems: 1
+          maxItems: 10000
+          items:
+            $ref: '#/components/schemas/WhiteboardPoint'
+    WhiteboardStrokeEndEvent:
+      type: object
+      required:
+        - roomId
+        - stroke
+      additionalProperties: false
+      properties:
+        roomId:
+          $ref: '#/components/schemas/Uuid'
+        stroke:
+          $ref: '#/components/schemas/WhiteboardStroke'
     VideoSourceType:
       type: string
       enum:
@@ -625,10 +1012,13 @@ components:
         - providerVideoId
         - playing
         - currentTime
+        - effectiveCurrentTime
         - duration
         - updatedByUserId
         - createdAt
         - updatedAt
+        - serverTime
+        - serverTimestamp
       additionalProperties: true
       properties:
         id:
@@ -651,6 +1041,11 @@ components:
           type: number
           minimum: 0
           example: 35.4
+        effectiveCurrentTime:
+          type: number
+          minimum: 0
+          description: Позиция воспроизведения, рассчитанная backend на момент serverTimestamp.
+          example: 36.1
         duration:
           type: number
           minimum: 0
@@ -666,6 +1061,14 @@ components:
         updatedAt:
           type: string
           format: date-time
+        serverTime:
+          type: string
+          format: date-time
+        serverTimestamp:
+          type: integer
+          format: int64
+          description: Unix milliseconds backend-времени, на котором рассчитан effectiveCurrentTime.
+          example: 1785628801200
     UserSnapshot:
       type: object
       required:
@@ -1065,3 +1468,50 @@ components:
           example: true
         readState:
           $ref: '#/components/schemas/ChatReadState'
+    WhiteboardStateAck:
+      type: object
+      required:
+        - ok
+        - state
+      properties:
+        ok:
+          type: boolean
+          example: true
+        state:
+          $ref: '#/components/schemas/WhiteboardState'
+    WhiteboardStrokeStartAck:
+      type: object
+      required:
+        - ok
+        - event
+      properties:
+        ok:
+          type: boolean
+          example: true
+        event:
+          $ref: '#/components/schemas/WhiteboardStrokeStartEvent'
+    WhiteboardStrokeAppendAck:
+      type: object
+      required:
+        - ok
+        - event
+      properties:
+        ok:
+          type: boolean
+          example: true
+        event:
+          $ref: '#/components/schemas/WhiteboardStrokeAppendEvent'
+    WhiteboardStrokeEndAck:
+      type: object
+      required:
+        - ok
+        - stroke
+        - state
+      properties:
+        ok:
+          type: boolean
+          example: true
+        stroke:
+          $ref: '#/components/schemas/WhiteboardStroke'
+        state:
+          $ref: '#/components/schemas/WhiteboardState'

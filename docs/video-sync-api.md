@@ -44,6 +44,13 @@ GET /rooms/:roomId/video
 
 Any active room participant can read state.
 
+The response includes server timing fields for delay compensation:
+
+- `currentTime` is the saved playback position at `updatedAt`.
+- `effectiveCurrentTime` is the playback position calculated on the backend at `serverTimestamp`.
+- `serverTimestamp` is Unix milliseconds from the backend clock.
+- If `playing` is `true`, the frontend can additionally add `(Date.now() - serverTimestamp) / 1000` before seeking the player.
+
 For full room UI restore after reconnect, use:
 
 ```http
@@ -126,9 +133,29 @@ State shape:
   "providerVideoId": "dQw4w9WgXcQ",
   "playing": false,
   "currentTime": 0,
+  "effectiveCurrentTime": 0,
   "duration": 212,
   "updatedByUserId": "uuid",
   "createdAt": "2026-08-02T00:00:00.000Z",
-  "updatedAt": "2026-08-02T00:00:00.000Z"
+  "updatedAt": "2026-08-02T00:00:00.000Z",
+  "serverTime": "2026-08-02T00:00:01.200Z",
+  "serverTimestamp": 1785628801200
+}
+```
+
+Frontend apply example:
+
+```ts
+const driftSeconds = state.playing
+  ? Math.max(0, (Date.now() - state.serverTimestamp) / 1000)
+  : 0;
+const targetTime = state.effectiveCurrentTime + driftSeconds;
+
+player.seekTo(targetTime);
+
+if (state.playing) {
+  player.play();
+} else {
+  player.pause();
 }
 ```

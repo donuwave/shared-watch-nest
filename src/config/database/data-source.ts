@@ -13,6 +13,7 @@ import { RoomPresence } from '../../entity/room/room-presence.entity';
 import { VideoState } from '../../entity/video-sync/video-state.entity';
 import { ChatMessage } from '../../entity/chat/chat-message.entity';
 import { ChatReadState } from '../../entity/chat/chat-read-state.entity';
+import { WhiteboardState } from '../../entity/whiteboard/whiteboard-state.entity';
 
 const dbPort = Number(process.env.DB_PORT ?? 5432);
 
@@ -38,6 +39,7 @@ export default new DataSource({
     VideoState,
     ChatMessage,
     ChatReadState,
+    WhiteboardState,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   migrationsTableName: 'typeorm_migrations',

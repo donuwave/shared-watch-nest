@@ -12,6 +12,7 @@ import { VideoSyncModule } from './entity/video-sync/video-sync.module';
 import { RealtimeApiModule } from './realtime-api/realtime-api.module';
 import { ChatModule } from './entity/chat/chat.module';
 import { VoiceModule } from './entity/voice/voice.module';
+import { WhiteboardModule } from './entity/whiteboard/whiteboard.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { VoiceModule } from './entity/voice/voice.module';
     VideoSyncModule,
     ChatModule,
     VoiceModule,
+    WhiteboardModule,
     RealtimeApiModule,
   ],
   controllers: [],

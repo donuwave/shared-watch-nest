@@ -136,6 +136,16 @@ socket.on('video:state', (state) => {});
 socket.on('video:sync-state', (state) => {});
 ```
 
+`video:source-changed`, `video:state` и `video:sync-state` возвращают один shape.
+Для компенсации задержки используй `effectiveCurrentTime` и `serverTimestamp`:
+
+```ts
+const driftSeconds = state.playing
+  ? Math.max(0, (Date.now() - state.serverTimestamp) / 1000)
+  : 0;
+const targetTime = state.effectiveCurrentTime + driftSeconds;
+```
+
 ## Chat
 
 Перед chat events клиент должен выполнить `room:join`.
@@ -357,4 +367,121 @@ socket.on(
 
 ```ts
 socket.on('voice:speaking', ({ roomId, userId, isSpeaking, audioLevel, ts }) => {});
+```
+
+## Whiteboard
+
+Перед whiteboard events клиент должен выполнить `room:join`.
+
+### whiteboard:enable
+
+Событие от клиента. Доступно только `owner` или `moderator`. Видео должно быть на паузе.
+
+```ts
+socket.emit('whiteboard:enable', { roomId }, (response) => {
+  // { ok: true, state }
+});
+```
+
+### whiteboard:disable
+
+Событие от клиента. Доступно только `owner` или `moderator`.
+
+```ts
+socket.emit('whiteboard:disable', { roomId }, (response) => {
+  // { ok: true, state }
+});
+```
+
+### whiteboard:clear
+
+Событие от клиента. Доступно только `owner` или `moderator`.
+
+```ts
+socket.emit('whiteboard:clear', { roomId }, (response) => {
+  // { ok: true, state }
+});
+```
+
+### whiteboard:stroke-start
+
+Событие от клиента. Доступно любому активному участнику, если whiteboard включен и видео на паузе.
+
+```ts
+socket.emit(
+  'whiteboard:stroke-start',
+  { roomId, strokeId, color: '#ffcc00', width: 4, point: { x: 0.42, y: 0.31 } },
+  (response) => {
+    // { ok: true, event }
+  },
+);
+```
+
+### whiteboard:stroke-append
+
+Событие от клиента. Передает новые точки для live-отрисовки.
+
+```ts
+socket.emit(
+  'whiteboard:stroke-append',
+  { roomId, strokeId, points: [{ x: 0.43, y: 0.32 }] },
+  (response) => {
+    // { ok: true, event }
+  },
+);
+```
+
+### whiteboard:stroke-end
+
+Событие от клиента. Передает полный stroke, backend сохраняет его в snapshot.
+
+```ts
+socket.emit(
+  'whiteboard:stroke-end',
+  {
+    roomId,
+    strokeId,
+    color: '#ffcc00',
+    width: 4,
+    points: [
+      { x: 0.42, y: 0.31 },
+      { x: 0.43, y: 0.32 },
+    ],
+  },
+  (response) => {
+    // { ok: true, stroke, state }
+  },
+);
+```
+
+### whiteboard:state
+
+Событие от сервера для участников комнаты после `enable`, `disable` или `clear`.
+
+```ts
+socket.on('whiteboard:state', (state) => {});
+```
+
+### whiteboard:stroke-start
+
+Событие от сервера для остальных участников комнаты.
+
+```ts
+socket.on('whiteboard:stroke-start', (event) => {});
+```
+
+### whiteboard:stroke-append
+
+Событие от сервера для остальных участников комнаты.
+
+```ts
+socket.on('whiteboard:stroke-append', (event) => {});
+```
+
+### whiteboard:stroke-end
+
+Событие от сервера для всех участников комнаты.
+
+```ts
+socket.on('whiteboard:stroke-end', ({ roomId, stroke }) => {});
 ```

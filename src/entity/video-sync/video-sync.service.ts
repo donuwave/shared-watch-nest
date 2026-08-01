@@ -10,6 +10,7 @@ import { SetVideoSourceDto } from './dto/set-video-source.dto';
 import { RoomService } from '../room/room.service';
 import { parseVideoUrl } from './video-url-parser';
 import type { RoomParticipantRole } from '../room/types/room-participant-role';
+import { toVideoStateSnapshot } from './video-state-snapshot';
 
 const VIDEO_CONTROL_ROLES: RoomParticipantRole[] = ['owner', 'moderator'];
 
@@ -40,7 +41,9 @@ export class VideoSyncService {
       dto.duration === undefined ? null : this.normalizeTime(dto.duration);
     nextState.updatedByUserId = userId;
 
-    return await this.videoStateRepository.save(nextState);
+    const savedState = await this.videoStateRepository.save(nextState);
+
+    return toVideoStateSnapshot(savedState);
   }
 
   async play(roomId: string, userId: string, currentTime: number) {
@@ -51,7 +54,9 @@ export class VideoSyncService {
     state.currentTime = this.normalizeTime(currentTime);
     state.updatedByUserId = userId;
 
-    return await this.videoStateRepository.save(state);
+    const savedState = await this.videoStateRepository.save(state);
+
+    return toVideoStateSnapshot(savedState);
   }
 
   async pause(roomId: string, userId: string, currentTime: number) {
@@ -62,7 +67,9 @@ export class VideoSyncService {
     state.currentTime = this.normalizeTime(currentTime);
     state.updatedByUserId = userId;
 
-    return await this.videoStateRepository.save(state);
+    const savedState = await this.videoStateRepository.save(state);
+
+    return toVideoStateSnapshot(savedState);
   }
 
   async seek(roomId: string, userId: string, currentTime: number) {
@@ -72,15 +79,19 @@ export class VideoSyncService {
     state.currentTime = this.normalizeTime(currentTime);
     state.updatedByUserId = userId;
 
-    return await this.videoStateRepository.save(state);
+    const savedState = await this.videoStateRepository.save(state);
+
+    return toVideoStateSnapshot(savedState);
   }
 
   async getState(roomId: string, userId: string) {
     await this.roomService.getActiveParticipant(roomId, userId);
 
-    return await this.videoStateRepository.findOne({
+    const state = await this.videoStateRepository.findOne({
       where: { roomId },
     });
+
+    return toVideoStateSnapshot(state);
   }
 
   private async getExistingState(roomId: string): Promise<VideoState> {

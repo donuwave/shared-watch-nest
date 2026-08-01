@@ -7,7 +7,9 @@ import { RoomParticipant } from './room-participant.entity';
 import { RoomPresence } from './room-presence.entity';
 import { RoomService } from './room.service';
 import { VideoState } from '../video-sync/video-state.entity';
+import { toVideoStateSnapshot } from '../video-sync/video-state-snapshot';
 import { User } from '../users/users.entity';
+import { WhiteboardState } from '../whiteboard/whiteboard-state.entity';
 
 type RoomUserSnapshot = Pick<
   User,
@@ -25,6 +27,8 @@ export class RoomStateService {
     private readonly presenceRepository: Repository<RoomPresence>,
     @InjectRepository(VideoState)
     private readonly videoStateRepository: Repository<VideoState>,
+    @InjectRepository(WhiteboardState)
+    private readonly whiteboardStateRepository: Repository<WhiteboardState>,
     private readonly roomService: RoomService,
     private readonly configService: ConfigService,
   ) {}
@@ -35,12 +39,15 @@ export class RoomStateService {
       userId,
     );
 
-    const [room, participants, presence, video] = await Promise.all([
-      this.getRoom(roomId),
-      this.getParticipants(roomId),
-      this.getPresence(roomId),
-      this.videoStateRepository.findOne({ where: { roomId } }),
-    ]);
+    const [room, participants, presence, video, whiteboard] = await Promise.all(
+      [
+        this.getRoom(roomId),
+        this.getParticipants(roomId),
+        this.getPresence(roomId),
+        this.videoStateRepository.findOne({ where: { roomId } }),
+        this.whiteboardStateRepository.findOne({ where: { roomId } }),
+      ],
+    );
     const currentParticipantWithUser =
       participants.find((participant) => {
         return participant.id === currentParticipant.id;
@@ -55,7 +62,8 @@ export class RoomStateService {
         return this.toParticipantSnapshot(participant);
       }),
       presence,
-      video,
+      video: toVideoStateSnapshot(video),
+      whiteboard: whiteboard ?? this.getEmptyWhiteboardState(roomId),
     };
   }
 
@@ -146,6 +154,20 @@ export class RoomStateService {
       username: user.username,
       discriminator: user.discriminator,
       avatarUrl: user.avatarUrl,
+    };
+  }
+
+  private getEmptyWhiteboardState(roomId: string) {
+    return {
+      id: null,
+      roomId,
+      enabled: false,
+      snapshot: {
+        strokes: [],
+      },
+      updatedByUserId: null,
+      createdAt: null,
+      updatedAt: null,
     };
   }
 }
