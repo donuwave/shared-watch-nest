@@ -146,8 +146,11 @@ export class AuthController {
       },
     },
   })
-  async logout(@CurrentUser() user: JwtPayload) {
-    return this.authService.logout(user.userId, user.sessionId);
+  async logout(
+    @CurrentUser() user: JwtPayload,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.logout(user.userId, user.sessionId, res);
   }
 
   @Get('me')

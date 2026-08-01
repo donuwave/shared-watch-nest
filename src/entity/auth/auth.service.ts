@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { Response } from 'express';
+import type { CookieOptions, Response } from 'express';
 import { UsersService } from '../users/users.service';
 import { SessionService } from '../session/session.service';
 import { RegisterDto } from './dto/register.dto';
@@ -133,8 +133,10 @@ export class AuthService {
     });
   }
 
-  async logout(userId: string, sessionId: string) {
+  async logout(userId: string, sessionId: string, res: Response) {
     await this.sessionsService.terminate(sessionId, userId);
+    res.clearCookie('refreshToken', this.getRefreshCookieClearOptions());
+
     return { message: 'Успешный выход' };
   }
 
@@ -232,9 +234,7 @@ export class AuthService {
 
     await this.sessionsService.updateRefreshToken(session.id, refreshToken);
 
-    console.log(refreshToken); //TODO: Заменить для логирования refresh tokens
-    // refreshToken передаем в куки
-    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true });
+    res.cookie('refreshToken', refreshToken, this.getRefreshCookieOptions());
 
     return accessToken;
   }
@@ -269,6 +269,63 @@ export class AuthService {
       secret: this.configService.get('JWT_REFRESH_SECRET'),
       expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION', '7d'),
     });
+  }
+
+  private getRefreshCookieOptions(): CookieOptions {
+    return {
+      ...this.getRefreshCookieClearOptions(),
+      maxAge: this.parseDurationMs(
+        this.configService.get<string>('JWT_REFRESH_EXPIRATION'),
+        30 * 24 * 60 * 60 * 1000,
+      ),
+    };
+  }
+
+  private getRefreshCookieClearOptions(): CookieOptions {
+    const domain = this.configService.get<string>('COOKIE_DOMAIN');
+
+    return {
+      httpOnly: true,
+      secure: this.configService.get<string>('COOKIE_SECURE') === 'true',
+      sameSite: this.getCookieSameSite(),
+      path: '/',
+      ...(domain ? { domain } : {}),
+    };
+  }
+
+  private getCookieSameSite(): CookieOptions['sameSite'] {
+    const sameSite = this.configService
+      .get<string>('COOKIE_SAME_SITE', 'lax')
+      .toLowerCase();
+
+    if (sameSite === 'strict' || sameSite === 'none') {
+      return sameSite;
+    }
+
+    return 'lax';
+  }
+
+  private parseDurationMs(value: string | undefined, fallbackMs: number): number {
+    if (!value) {
+      return fallbackMs;
+    }
+
+    const match = value.match(/^(\d+)(s|m|h|d)?$/);
+
+    if (!match) {
+      return fallbackMs;
+    }
+
+    const amount = Number(match[1]);
+    const unit = match[2] ?? 's';
+    const multiplierByUnit = {
+      s: 1000,
+      m: 60 * 1000,
+      h: 60 * 60 * 1000,
+      d: 24 * 60 * 60 * 1000,
+    };
+
+    return amount * multiplierByUnit[unit];
   }
 
   // Получение информации об устройстве из User-Agent

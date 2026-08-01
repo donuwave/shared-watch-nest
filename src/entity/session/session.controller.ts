@@ -1,10 +1,8 @@
 import {
-  Body,
   Controller,
   Delete,
   Get,
   Param,
-  Post,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -13,16 +11,12 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { CreateSessionDto } from './dto/create.dto';
 import { Session } from './session.entity';
 import { SessionService } from './session.service';
 import { UUIDPipe } from '../../pipes/uuid.pipe';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { CurrentUser } from '../../decorators/current-user.decorator';
-import { JwtPayload } from '../auth/types/jwt-payload.types';
-import { RolesGuard } from '../../guards/roles.guard';
-import { Roles } from '../../decorators/roles.decorator';
-import { EmailVerificationGuard } from '../../guards/email-verification.guard';
+import type { JwtPayload } from '../auth/types/jwt-payload.types';
 
 @ApiTags('Session')
 @ApiBearerAuth('jwt')
@@ -30,20 +24,8 @@ import { EmailVerificationGuard } from '../../guards/email-verification.guard';
 export class SessionController {
   constructor(private readonly sessionService: SessionService) {}
 
-  @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard, EmailVerificationGuard)
-  @Roles('admin')
-  @ApiOperation({ summary: 'Создание сессии пользователя' })
-  @ApiResponse({ status: 201, description: 'Сессия успешно создана' })
-  @ApiResponse({ status: 400, description: 'Невалидные данные' })
-  @ApiResponse({ status: 404, description: 'Пользователь не найден' })
-  async create(@Body() createdSession: CreateSessionDto): Promise<Session> {
-    return await this.sessionService.create(createdSession);
-  }
-
   @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'moderator', 'user')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: 'Получение всех активных сессий текущего пользователя',
   })
@@ -53,20 +35,6 @@ export class SessionController {
     @CurrentUser('userId') userId: JwtPayload['userId'],
   ): Promise<Session[]> {
     return await this.sessionService.getActiveSessionByUserId(userId);
-  }
-
-  @Delete('all')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({
-    summary: 'Завершить все сессии пользователя (выйти со всех устройств)',
-  })
-  @ApiResponse({ status: 200, description: 'Все сессии успешно завершены' })
-  @ApiResponse({ status: 401, description: 'Не авторизован' })
-  async terminateAllSessions(
-    @CurrentUser('userId') userId: JwtPayload['userId'],
-  ) {
-    await this.sessionService.terminateAll(userId);
-    return { message: 'All sessions successfully terminated' };
   }
 
   @Delete('others')

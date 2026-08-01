@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -25,6 +26,8 @@ import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { RolesGuard } from '../../guards/roles.guard';
 import { Roles } from '../../decorators/roles.decorator';
 import { EmailVerificationGuard } from '../../guards/email-verification.guard';
+import { CurrentUser } from '../../decorators/current-user.decorator';
+import type { JwtPayload } from '../auth/types/jwt-payload.types';
 
 @ApiTags('Users')
 @ApiBearerAuth('jwt')
@@ -33,8 +36,8 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles('admin', 'moderator')
+  @UseGuards(JwtAuthGuard, EmailVerificationGuard, RolesGuard)
+  @Roles('admin', 'moderator')
   @ApiOperation({ summary: 'Получение всех пользователей' })
   @ApiResponse({ status: 200, description: 'Список пользователей' })
   @ApiResponse({ status: 404, description: 'Список пользователей пуст' })
@@ -43,11 +46,17 @@ export class UsersController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Получение пользователя по ID' })
   @ApiResponse({ status: 200, description: 'Пользователь найден' })
   @ApiResponse({ status: 404, description: 'Пользователь не найден' })
   @ApiParam({ name: 'id', description: 'User ID' })
-  async findOne(@Param('id', UUIDPipe) id: string): Promise<User> {
+  async findOne(
+    @Param('id', UUIDPipe) id: string,
+    @CurrentUser() currentUser: JwtPayload,
+  ): Promise<User> {
+    await this.assertSelfOrRole(currentUser.userId, id, ['admin', 'moderator']);
+
     return await this.usersService.findOne(id);
   }
 
@@ -72,7 +81,10 @@ export class UsersController {
   async update(
     @Param('id', UUIDPipe) id: string,
     @Body() updatedUser: UpdateUserDto,
+    @CurrentUser() currentUser: JwtPayload,
   ): Promise<User> {
+    await this.assertSelfOrRole(currentUser.userId, id, ['admin']);
+
     return await this.usersService.update(id, updatedUser);
   }
 
@@ -90,7 +102,10 @@ export class UsersController {
   async changePassword(
     @Param('id', UUIDPipe) id: string,
     @Body() changePasswordDto: ChangePasswordDto,
+    @CurrentUser() currentUser: JwtPayload,
   ): Promise<User> {
+    this.assertSelf(currentUser.userId, id);
+
     return await this.usersService.changePassword(id, changePasswordDto);
   }
 
@@ -98,7 +113,37 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, EmailVerificationGuard)
   @ApiOperation({ summary: 'Удаление пользователя' })
   @ApiResponse({ status: 201, description: 'Пользователь успешно удален' })
-  async delete(@Param('id', UUIDPipe) id: string): Promise<User> {
+  async delete(
+    @Param('id', UUIDPipe) id: string,
+    @CurrentUser() currentUser: JwtPayload,
+  ): Promise<User> {
+    await this.assertSelfOrRole(currentUser.userId, id, ['admin']);
+
     return await this.usersService.delete(id);
+  }
+
+  private async assertSelfOrRole(
+    currentUserId: string,
+    targetUserId: string,
+    allowedRoles: string[],
+  ): Promise<void> {
+    if (currentUserId === targetUserId) {
+      return;
+    }
+
+    const currentUser = await this.usersService.findOne(currentUserId);
+    const currentRole = currentUser.role?.name;
+
+    if (currentRole && allowedRoles.includes(currentRole)) {
+      return;
+    }
+
+    throw new ForbiddenException('Insufficient permissions');
+  }
+
+  private assertSelf(currentUserId: string, targetUserId: string): void {
+    if (currentUserId !== targetUserId) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
   }
 }

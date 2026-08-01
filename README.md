@@ -44,6 +44,11 @@ JWT_ACCESS_EXPIRATION=3600
 JWT_REFRESH_SECRET=local_refresh_super_secret_change_in_production
 JWT_REFRESH_EXPIRATION=30d
 
+# Cookie
+COOKIE_SECURE=false
+COOKIE_SAME_SITE=lax
+COOKIE_DOMAIN=
+
 # Почта
 APP_FRONTEND_URL=http://localhost:3000
 MAIL_HOST=
