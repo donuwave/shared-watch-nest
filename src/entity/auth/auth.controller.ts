@@ -20,6 +20,8 @@ import {
   ApiResponse,
   ApiBody,
   ApiBearerAuth,
+  ApiCookieAuth,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { RolesGuard } from '../../guards/roles.guard';
@@ -37,6 +39,11 @@ import {
   YandexOAuthGuard,
 } from '../../guards/oauth-state.guard';
 import { OAuthRedirectFilter } from '../../filters/oauth-redirect.filter';
+import {
+  accessTokenSchema,
+  authMeResponseSchema,
+  messageResponseSchema,
+} from '../../swagger/shared-watch-schemas';
 
 type OAuthRequest = ExpressRequest & { user: User };
 type CookieRequest = ExpressRequest & {
@@ -54,6 +61,7 @@ export class AuthController {
   @ApiResponse({
     status: 201,
     description: 'Пользователь успешно зарегистрирован',
+    schema: accessTokenSchema,
   })
   @ApiResponse({ status: 400, description: 'Невалидные данные' })
   @ApiResponse({
@@ -74,7 +82,11 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ summary: 'Войти в систему' })
-  @ApiResponse({ status: 200, description: 'Успешная аутентификация' })
+  @ApiResponse({
+    status: 200,
+    description: 'Успешная аутентификация',
+    schema: accessTokenSchema,
+  })
   @ApiResponse({ status: 401, description: 'Неверные учетные данные' })
   @ApiResponse({ status: 400, description: 'Невалидные данные' })
   @ApiBody({ type: LoginDto })
@@ -91,8 +103,13 @@ export class AuthController {
 
   @Post('refresh')
   @UseGuards(RolesGuard, AuthGuard('jwt-refresh'))
+  @ApiCookieAuth('refreshToken')
   @ApiOperation({ summary: 'Обновить токены' })
-  @ApiResponse({ status: 200, description: 'Токены успешно обновлены' })
+  @ApiResponse({
+    status: 200,
+    description: 'Access token успешно обновлен',
+    schema: accessTokenSchema,
+  })
   @ApiResponse({
     status: 401,
     description: 'Невалидный или просроченный refresh token',
@@ -107,7 +124,12 @@ export class AuthController {
 
   @Post('verify-email')
   @ApiOperation({ summary: 'Подтвердить почту' })
-  @ApiResponse({ status: 200, description: 'Email успешно подтвержден' })
+  @ApiBody({ type: VerifyEmailDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Email успешно подтвержден',
+    schema: messageResponseSchema('Email успешно подтвержден'),
+  })
   @ApiResponse({ status: 400, description: 'Токен уже использован или истек' })
   @ApiResponse({ status: 404, description: 'Токен не найден' })
   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
@@ -117,7 +139,11 @@ export class AuthController {
   @Post('resend-email-verification')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Повторно отправить подтверждение почты' })
-  @ApiResponse({ status: 200, description: 'Ссылка подтверждения создана' })
+  @ApiResponse({
+    status: 200,
+    description: 'Ссылка подтверждения создана',
+    schema: messageResponseSchema('Письмо подтверждения отправлено'),
+  })
   @ApiResponse({ status: 401, description: 'Не авторизован' })
   async resendEmailVerification(@CurrentUser() user: JwtPayload) {
     return this.authService.resendEmailVerification(user.userId);
@@ -128,6 +154,9 @@ export class AuthController {
   @ApiResponse({
     status: 201,
     description: 'Если email существует, ссылка для сброса отправлена',
+    schema: messageResponseSchema(
+      'Если email существует, ссылка для сброса отправлена',
+    ),
   })
   @ApiResponse({ status: 400, description: 'Невалидные данные' })
   @ApiBody({ type: ForgotPasswordDto })
@@ -137,7 +166,11 @@ export class AuthController {
 
   @Post('reset-password')
   @ApiOperation({ summary: 'Сбросить пароль по token из письма' })
-  @ApiResponse({ status: 201, description: 'Пароль успешно сброшен' })
+  @ApiResponse({
+    status: 201,
+    description: 'Пароль успешно сброшен',
+    schema: messageResponseSchema('Пароль успешно сброшен'),
+  })
   @ApiResponse({ status: 400, description: 'Токен уже использован или истек' })
   @ApiResponse({ status: 404, description: 'Токен не найден' })
   @ApiBody({ type: ResetPasswordDto })
@@ -147,20 +180,14 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiCookieAuth('refreshToken')
   @ApiOperation({ summary: 'Выйти из системы' })
-  @ApiResponse({ status: 200, description: 'Успешный выход' })
-  @ApiResponse({ status: 400, description: 'Невалидный refresh token' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        refreshToken: {
-          type: 'string',
-          example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
-        },
-      },
-    },
+  @ApiResponse({
+    status: 200,
+    description: 'Успешный выход',
+    schema: messageResponseSchema('Успешный выход'),
   })
+  @ApiResponse({ status: 400, description: 'Невалидный refresh token' })
   async logout(
     @CurrentUser() user: JwtPayload,
     @Res({ passthrough: true }) res: Response,
@@ -171,7 +198,12 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Получить информацию о текущем пользователе' })
-  @ApiResponse({ status: 200, description: 'Текущий пользователь сессии' })
+  @ApiResponse({
+    status: 200,
+    description: 'Текущий пользователь сессии',
+    schema: authMeResponseSchema,
+  })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
   @ApiResponse({ status: 404, description: 'Пользователь не найден' })
   async me(@CurrentUser() user: JwtPayload) {
     return this.authService.me(user.userId);
@@ -259,6 +291,9 @@ export class AuthController {
   @Get('vk/callback')
   @UseFilters(OAuthRedirectFilter)
   @ApiOperation({ summary: 'Callback авторизации через VK ID' })
+  @ApiQuery({ name: 'code', required: false })
+  @ApiQuery({ name: 'state', required: false })
+  @ApiQuery({ name: 'device_id', required: false })
   @ApiResponse({
     status: 302,
     description:

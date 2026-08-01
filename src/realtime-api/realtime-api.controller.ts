@@ -1,11 +1,17 @@
 import { Controller, Get, Header } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
+@ApiTags('Realtime API')
 @Controller('realtime-api')
 export class RealtimeApiController {
   @Get()
   @Header('Content-Type', 'text/html; charset=utf-8')
+  @ApiOperation({
+    summary: 'Открыть HTML viewer для AsyncAPI realtime-документации',
+  })
+  @ApiResponse({ status: 200, description: 'HTML viewer' })
   getViewer(): string {
     return `<!doctype html>
 <html lang="ru">
@@ -60,12 +66,19 @@ export class RealtimeApiController {
 
   @Get('asyncapi.yaml')
   @Header('Content-Type', 'application/yaml; charset=utf-8')
+  @ApiOperation({ summary: 'Получить AsyncAPI spec для Socket.IO событий' })
+  @ApiResponse({ status: 200, description: 'AsyncAPI YAML' })
   getAsyncApiSpec(): string {
     return this.readDocsFile('asyncapi.yaml');
   }
 
   @Get('events')
   @Header('Content-Type', 'text/markdown; charset=utf-8')
+  @ApiOperation({ summary: 'Получить markdown-документацию Socket.IO событий' })
+  @ApiResponse({
+    status: 200,
+    description: 'Markdown со списком realtime events',
+  })
   getEventsMarkdown(): string {
     return this.readDocsFile('ws-events.md');
   }

@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
+  ApiBody,
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
@@ -40,6 +41,8 @@ export class UsersController {
   @Roles('admin', 'moderator')
   @ApiOperation({ summary: 'Получение всех пользователей' })
   @ApiResponse({ status: 200, description: 'Список пользователей' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({ status: 403, description: 'Нужна роль admin или moderator' })
   @ApiResponse({ status: 404, description: 'Список пользователей пуст' })
   async findAll(): Promise<User[]> {
     return await this.usersService.findAll();
@@ -49,6 +52,11 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Получение пользователя по ID' })
   @ApiResponse({ status: 200, description: 'Пользователь найден' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({
+    status: 403,
+    description: 'Можно читать себя, либо нужна роль admin/moderator',
+  })
   @ApiResponse({ status: 404, description: 'Пользователь не найден' })
   @ApiParam({ name: 'id', description: 'User ID' })
   async findOne(
@@ -64,7 +72,11 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, EmailVerificationGuard, RolesGuard)
   @Roles('admin', 'moderator')
   @ApiOperation({ summary: 'Создание пользователей' })
+  @ApiBody({ type: CreateUserDto })
   @ApiResponse({ status: 201, description: 'Пользователь создан успешно' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({ status: 403, description: 'Нужна роль admin или moderator' })
+  @ApiResponse({ status: 409, description: 'Email уже занят' })
   async create(@Body() createdUser: CreateUserDto): Promise<User> {
     return this.usersService.create(createdUser);
   }
@@ -72,7 +84,14 @@ export class UsersController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, EmailVerificationGuard)
   @ApiOperation({ summary: 'Обновление пользователя' })
-  @ApiResponse({ status: 201, description: 'Пользователь изменен' })
+  @ApiBody({ type: UpdateUserDto })
+  @ApiResponse({ status: 200, description: 'Пользователь изменен' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({
+    status: 403,
+    description: 'Можно обновлять себя, либо нужна роль admin',
+  })
+  @ApiResponse({ status: 404, description: 'Пользователь не найден' })
   @ApiParam({
     name: 'id',
     description: 'ID пользователя в формате UUID v4',
@@ -91,8 +110,11 @@ export class UsersController {
   @Patch(':id/password')
   @UseGuards(JwtAuthGuard, EmailVerificationGuard)
   @ApiOperation({ summary: 'Изменить пароль пользователя' })
+  @ApiBody({ type: ChangePasswordDto })
   @ApiResponse({ status: 200, description: 'Пароль успешно изменен' })
   @ApiResponse({ status: 400, description: 'Текущий пароль неверный' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({ status: 403, description: 'Можно менять пароль только себе' })
   @ApiResponse({ status: 404, description: 'Пользователь не найден' })
   @ApiParam({
     name: 'id',
@@ -112,7 +134,13 @@ export class UsersController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, EmailVerificationGuard)
   @ApiOperation({ summary: 'Удаление пользователя' })
-  @ApiResponse({ status: 201, description: 'Пользователь успешно удален' })
+  @ApiResponse({ status: 200, description: 'Пользователь успешно удален' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({
+    status: 403,
+    description: 'Можно удалить себя, либо нужна роль admin',
+  })
+  @ApiResponse({ status: 404, description: 'Пользователь не найден' })
   async delete(
     @Param('id', UUIDPipe) id: string,
     @CurrentUser() currentUser: JwtPayload,

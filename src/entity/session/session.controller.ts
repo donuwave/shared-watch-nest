@@ -2,9 +2,11 @@ import { Controller, Delete, Get, Param, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { messageResponseSchema } from '../../swagger/shared-watch-schemas';
 import { Session } from './session.entity';
 import { SessionService } from './session.service';
 import { UUIDPipe } from '../../pipes/uuid.pipe';
@@ -40,6 +42,7 @@ export class SessionController {
   @ApiResponse({
     status: 200,
     description: 'Все сессии кроме текущей успешно завершены',
+    schema: messageResponseSchema('All other sessions successfully terminated'),
   })
   @ApiResponse({ status: 401, description: 'Не авторизован' })
   async terminateOtherSessions(
@@ -53,7 +56,12 @@ export class SessionController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Завершить конкретную сессию' })
-  @ApiResponse({ status: 200, description: 'Сессия успешно завершена' })
+  @ApiParam({ name: 'id', description: 'ID сессии в формате UUID v4' })
+  @ApiResponse({
+    status: 200,
+    description: 'Сессия успешно завершена',
+    schema: messageResponseSchema('Сессия успешно завершена'),
+  })
   @ApiResponse({ status: 404, description: 'Сессия не найдена' })
   @ApiResponse({ status: 400, description: 'Невалидный формат ID' })
   @ApiResponse({ status: 401, description: 'Не авторизован' })

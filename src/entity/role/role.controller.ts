@@ -36,6 +36,8 @@ export class RoleController {
   @Roles('admin')
   @ApiOperation({ summary: 'Создать новую роль' })
   @ApiResponse({ status: 201, description: 'Роль успешно создана' })
+  @ApiResponse({ status: 400, description: 'Невалидные данные' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
   @ApiResponse({ status: 403, description: 'Запрещено' })
   @ApiResponse({
     status: 409,
@@ -51,6 +53,7 @@ export class RoleController {
   @Roles('admin')
   @ApiOperation({ summary: 'Получить все активные роли (только админ)' })
   @ApiResponse({ status: 200, description: 'Список ролей' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
   @ApiResponse({ status: 403, description: 'Запрещено' })
   async findAll() {
     return this.roleService.findAll();
@@ -61,6 +64,7 @@ export class RoleController {
   @Roles('admin', 'moderator')
   @ApiOperation({ summary: 'Получить роль по ID (админ, модератор)' })
   @ApiResponse({ status: 200, description: 'Роль найдена' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
   @ApiResponse({ status: 404, description: 'Роль не найдена' })
   @ApiResponse({ status: 403, description: 'Запрещено' })
   @ApiParam({
@@ -77,8 +81,11 @@ export class RoleController {
   @Roles('admin')
   @ApiOperation({ summary: 'Обновить роль (только админ)' })
   @ApiResponse({ status: 200, description: 'Роль успешно обновлена' })
+  @ApiResponse({ status: 400, description: 'Невалидные данные' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
   @ApiResponse({ status: 404, description: 'Роль не найдена' })
   @ApiResponse({ status: 403, description: 'Запрещено' })
+  @ApiResponse({ status: 409, description: 'Имя базовой роли нельзя изменить' })
   @ApiParam({
     name: 'id',
     description: 'ID роли в формате UUID v4',
@@ -98,8 +105,10 @@ export class RoleController {
   @Roles('admin')
   @ApiOperation({ summary: 'Удалить роль (мягкое удаление, только админ)' })
   @ApiResponse({ status: 200, description: 'Роль успешно удалена' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
   @ApiResponse({ status: 404, description: 'Роль не найдена' })
   @ApiResponse({ status: 403, description: 'Запрещено' })
+  @ApiResponse({ status: 409, description: 'Базовую роль нельзя удалить' })
   @ApiParam({
     name: 'id',
     description: 'ID роли в формате UUID v4',

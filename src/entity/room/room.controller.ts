@@ -26,6 +26,12 @@ import { Feature } from '../../decorators/feature.decorator';
 import { CurrentUser } from '../../decorators/current-user.decorator';
 import type { JwtPayload } from '../auth/types/jwt-payload.types';
 import { UUIDPipe } from '../../pipes/uuid.pipe';
+import {
+  errorResponseSchema,
+  messageResponseSchema,
+  roomParticipantSchema,
+  roomStateResponseSchema,
+} from '../../swagger/shared-watch-schemas';
 
 @ApiTags('Rooms')
 @ApiBearerAuth('jwt')
@@ -40,9 +46,25 @@ export class RoomController {
   @UseGuards(JwtAuthGuard, FeatureGuard)
   @Feature('rooms.create')
   @ApiOperation({ summary: 'Создать комнату' })
-  @ApiResponse({ status: 201, description: 'Комната создана' })
-  @ApiResponse({ status: 403, description: 'Feature rooms.create недоступна' })
   @ApiBody({ type: CreateRoomDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Комната создана, текущий пользователь стал owner',
+    schema: {
+      type: 'object',
+      properties: {
+        room: { type: 'object' },
+        currentParticipant: roomParticipantSchema,
+        invite: { type: 'object' },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({
+    status: 403,
+    description: 'Feature rooms.create недоступна',
+    schema: errorResponseSchema,
+  })
   async create(
     @Body() createRoomDto: CreateRoomDto,
     @CurrentUser() user: JwtPayload,
@@ -54,7 +76,21 @@ export class RoomController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Войти в комнату по invite code' })
   @ApiParam({ name: 'code', description: 'Invite code' })
-  @ApiResponse({ status: 201, description: 'Пользователь вошел в комнату' })
+  @ApiResponse({
+    status: 201,
+    description: 'Пользователь вошел в комнату',
+    schema: {
+      type: 'object',
+      properties: {
+        room: { type: 'object' },
+        currentParticipant: roomParticipantSchema,
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Invite истек или уже использован' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({ status: 403, description: 'Вход в комнату закрыт' })
+  @ApiResponse({ status: 404, description: 'Invite не найден' })
   async joinByInvite(
     @Param('code') code: string,
     @CurrentUser() user: JwtPayload,
@@ -66,7 +102,13 @@ export class RoomController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Выйти из комнаты' })
   @ApiParam({ name: 'id', description: 'ID комнаты в формате UUID v4' })
-  @ApiResponse({ status: 201, description: 'Пользователь вышел из комнаты' })
+  @ApiResponse({
+    status: 201,
+    description: 'Пользователь вышел из комнаты',
+    schema: messageResponseSchema('Вы вышли из комнаты'),
+  })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({ status: 404, description: 'Активный участник не найден' })
   async leave(
     @Param('id', UUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
@@ -83,8 +125,19 @@ export class RoomController {
     description: 'ID участника комнаты в формате UUID v4',
   })
   @ApiBody({ type: UpdateRoomParticipantRoleDto })
-  @ApiResponse({ status: 200, description: 'Роль участника изменена' })
-  @ApiResponse({ status: 403, description: 'Недостаточно прав в комнате' })
+  @ApiResponse({
+    status: 200,
+    description: 'Роль участника изменена',
+    schema: roomParticipantSchema,
+  })
+  @ApiResponse({ status: 400, description: 'Нельзя изменить роль владельца' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({
+    status: 403,
+    description: 'Недостаточно прав в комнате',
+    schema: errorResponseSchema,
+  })
+  @ApiResponse({ status: 404, description: 'Активный участник не найден' })
   async updateParticipantRole(
     @Param('id', UUIDPipe) id: string,
     @Param('participantId', UUIDPipe) participantId: string,
@@ -105,7 +158,13 @@ export class RoomController {
   @ApiParam({ name: 'id', description: 'ID комнаты в формате UUID v4' })
   @ApiBody({ type: UpdateRoomAccessDto })
   @ApiResponse({ status: 200, description: 'Доступность входа изменена' })
-  @ApiResponse({ status: 403, description: 'Недостаточно прав в комнате' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({
+    status: 403,
+    description: 'Недостаточно прав в комнате',
+    schema: errorResponseSchema,
+  })
+  @ApiResponse({ status: 404, description: 'Комната не найдена' })
   async updateAccess(
     @Param('id', UUIDPipe) id: string,
     @Body() dto: UpdateRoomAccessDto,
@@ -118,7 +177,14 @@ export class RoomController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Получить состояние комнаты для восстановления UI' })
   @ApiParam({ name: 'id', description: 'ID комнаты в формате UUID v4' })
-  @ApiResponse({ status: 200, description: 'Состояние комнаты' })
+  @ApiResponse({
+    status: 200,
+    description: 'Состояние комнаты',
+    schema: roomStateResponseSchema,
+  })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({ status: 403, description: 'Нет доступа к комнате' })
+  @ApiResponse({ status: 404, description: 'Комната не найдена' })
   async getState(
     @Param('id', UUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
@@ -131,6 +197,9 @@ export class RoomController {
   @ApiOperation({ summary: 'Получить комнату по ID' })
   @ApiParam({ name: 'id', description: 'ID комнаты в формате UUID v4' })
   @ApiResponse({ status: 200, description: 'Комната найдена' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({ status: 403, description: 'Нет доступа к комнате' })
+  @ApiResponse({ status: 404, description: 'Комната не найдена' })
   async findOne(
     @Param('id', UUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,

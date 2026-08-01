@@ -95,9 +95,9 @@
 - [x] Добавить Realtime API docs на `/realtime-api`.
 - [x] Добавить AsyncAPI spec для WebSocket/Socket.IO событий.
 - [x] Разделить Realtime API операции по доменам: presence, video, chat, voice, whiteboard.
-- [ ] Зафиксировать DTO для авторизации, комнат, участников, чата и video-sync событий.
-- [ ] Обновить Swagger под Shared Watch API.
-- [ ] Описать ошибки API единым форматом.
+- [x] Зафиксировать DTO для авторизации, комнат, участников, чата и video-sync событий.
+- [x] Обновить Swagger под Shared Watch API.
+- [x] Описать ошибки API единым форматом.
 - [ ] Добавить минимальные e2e-сценарии: регистрация, вход, создание комнаты, вход по ссылке.
   - [x] Покрыть auth e2e: регистрация, email verification, login, refresh, logout, password reset.
   - [ ] Покрыть rooms e2e: создание комнаты и вход по ссылке.

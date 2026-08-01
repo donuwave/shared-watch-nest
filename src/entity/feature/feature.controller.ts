@@ -26,6 +26,11 @@ export class FeatureController {
   @Roles('admin')
   @ApiOperation({ summary: 'Получить список features' })
   @ApiResponse({ status: 200, description: 'Список features' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({
+    status: 403,
+    description: 'Нужна роль admin и verified email',
+  })
   async findAll() {
     return await this.featureService.findAll();
   }
@@ -36,6 +41,12 @@ export class FeatureController {
   @ApiOperation({ summary: 'Получить feature по ID' })
   @ApiParam({ name: 'id', description: 'ID feature в формате UUID v4' })
   @ApiResponse({ status: 200, description: 'Feature найдена' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({
+    status: 403,
+    description: 'Нужна роль admin и verified email',
+  })
+  @ApiResponse({ status: 404, description: 'Feature не найдена' })
   async findOne(@Param('id', UUIDPipe) id: string) {
     return await this.featureService.findOne(id);
   }
@@ -47,6 +58,13 @@ export class FeatureController {
   @ApiParam({ name: 'id', description: 'ID feature в формате UUID v4' })
   @ApiBody({ type: UpdateFeatureDto })
   @ApiResponse({ status: 200, description: 'Feature обновлена' })
+  @ApiResponse({ status: 400, description: 'Невалидные данные' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({
+    status: 403,
+    description: 'Нужна роль admin и verified email',
+  })
+  @ApiResponse({ status: 404, description: 'Feature не найдена' })
   async update(
     @Param('id', UUIDPipe) id: string,
     @Body() updateFeatureDto: UpdateFeatureDto,

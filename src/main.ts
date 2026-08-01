@@ -10,6 +10,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { RoleService } from './entity/role/role.service';
 import cookieParser from 'cookie-parser';
 import { FeatureService } from './entity/feature/feature.service';
+import { ApiExceptionFilter } from './filters/api-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -28,6 +29,7 @@ async function bootstrap() {
   );
 
   app.use(cookieParser());
+  app.useGlobalFilters(new ApiExceptionFilter());
 
   const configService = app.get(ConfigService);
   const port = Number(configService.get<string>('PORT') ?? 3000);

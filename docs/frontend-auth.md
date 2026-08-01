@@ -355,18 +355,20 @@ On `status=error`, frontend should show login screen with a generic social-login
 
 Common statuses:
 
-- `400` - invalid request body or invalid token.
-- `401` - no auth, invalid access token, invalid refresh token.
-- `403` - auth exists, but user is not allowed or email verification is required.
-- `404` - entity or token not found.
-- `409` - email already exists.
-- `503` - SMTP delivery failed.
+- `400` - некорректный body или token.
+- `401` - нет auth, access token невалиден или refresh token невалиден.
+- `403` - auth есть, но доступа нет или требуется подтверждение email.
+- `404` - сущность или token не найдены.
+- `409` - email уже занят.
+- `503` - SMTP недоступен или письмо не отправилось.
+
+Все HTTP-ошибки возвращаются в едином формате из `docs/api-errors.md`.
 
 When backend returns `403` with:
 
 ```json
 {
-  "message": "Email verification required",
+  "message": "Требуется подтверждение email",
   "code": "EMAIL_VERIFICATION_EXPIRED"
 }
 ```
