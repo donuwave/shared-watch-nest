@@ -1,9 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import {
-  SwaggerModule,
-  DocumentBuilder,
-  SwaggerCustomOptions,
-} from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
@@ -11,6 +7,10 @@ import { RoleService } from './entity/role/role.service';
 import cookieParser from 'cookie-parser';
 import { FeatureService } from './entity/feature/feature.service';
 import { ApiExceptionFilter } from './filters/api-exception.filter';
+import {
+  createSwaggerDocument,
+  getSwaggerCustomOptions,
+} from './swagger/swagger.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -39,42 +39,9 @@ async function bootstrap() {
   const featureService = app.get(FeatureService);
   await featureService.seedDefaultFeatures();
 
-  const config = new DocumentBuilder()
-    .setTitle('Shared Watch API')
-    .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'Authorization',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
-      'jwt',
-    )
-    .addCookieAuth('refreshToken', {
-      type: 'apiKey',
-      in: 'cookie',
-      name: 'refreshToken',
-      description: 'Refresh token for obtaining new access tokens',
-    })
-    .build();
+  const document = createSwaggerDocument(app);
 
-  const document = SwaggerModule.createDocument(app, config);
-
-  const customOptions: SwaggerCustomOptions = {
-    swaggerOptions: {
-      persistAuthorization: true,
-      withCredentials: true,
-      cookies: {
-        enabled: true,
-      },
-    },
-    customSiteTitle: 'Shared Watch API Docs',
-  };
-
-  SwaggerModule.setup('api', app, document, customOptions);
+  SwaggerModule.setup('api', app, document, getSwaggerCustomOptions());
 
   await app.listen(port);
 }

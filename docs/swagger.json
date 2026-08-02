@@ -1,0 +1,3444 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/users": {
+      "get": {
+        "operationId": "UsersController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Список пользователей"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Нужна роль admin или moderator"
+          },
+          "404": {
+            "description": "Список пользователей пуст"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Получение всех пользователей",
+        "tags": [
+          "Users"
+        ]
+      },
+      "post": {
+        "operationId": "UsersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Пользователь создан успешно"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Нужна роль admin или moderator"
+          },
+          "409": {
+            "description": "Email уже занят"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Создание пользователей",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "operationId": "UsersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Пользователь найден"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Можно читать себя, либо нужна роль admin/moderator"
+          },
+          "404": {
+            "description": "Пользователь не найден"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Получение пользователя по ID",
+        "tags": [
+          "Users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID пользователя в формате UUID v4",
+            "schema": {
+              "example": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Пользователь изменен"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Можно обновлять себя, либо нужна роль admin"
+          },
+          "404": {
+            "description": "Пользователь не найден"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Обновление пользователя",
+        "tags": [
+          "Users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Пользователь успешно удален"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Можно удалить себя, либо нужна роль admin"
+          },
+          "404": {
+            "description": "Пользователь не найден"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Удаление пользователя",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}/password": {
+      "patch": {
+        "operationId": "UsersController_changePassword",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID пользователя в формате UUID v4",
+            "schema": {
+              "example": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Пароль успешно изменен"
+          },
+          "400": {
+            "description": "Текущий пароль неверный"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Можно менять пароль только себе"
+          },
+          "404": {
+            "description": "Пользователь не найден"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Изменить пароль пользователя",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/session": {
+      "get": {
+        "operationId": "SessionController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Список активных сессий"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Получение всех активных сессий текущего пользователя",
+        "tags": [
+          "Session"
+        ]
+      }
+    },
+    "/session/others": {
+      "delete": {
+        "operationId": "SessionController_terminateOtherSessions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Все сессии кроме текущей успешно завершены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "All other sessions successfully terminated"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Завершить все сессии кроме текущей (выйти со всех устройств, кроме этого)",
+        "tags": [
+          "Session"
+        ]
+      }
+    },
+    "/session/{id}": {
+      "delete": {
+        "operationId": "SessionController_terminate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID сессии в формате UUID v4",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Сессия успешно завершена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Сессия успешно завершена"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невалидный формат ID"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "404": {
+            "description": "Сессия не найдена"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Завершить конкретную сессию",
+        "tags": [
+          "Session"
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Пользователь успешно зарегистрирован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.shared-watch-access-token"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невалидные данные"
+          },
+          "409": {
+            "description": "Пользователь с таким email уже существует"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Зарегистрировать нового пользователя",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успешная аутентификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.shared-watch-access-token"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невалидные данные"
+          },
+          "401": {
+            "description": "Неверные учетные данные"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Войти в систему",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Access token успешно обновлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.shared-watch-access-token"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Невалидный или просроченный refresh token"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          },
+          {
+            "refreshToken": []
+          }
+        ],
+        "summary": "Обновить токены",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/verify-email": {
+      "post": {
+        "operationId": "AuthController_verifyEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email успешно подтвержден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Email успешно подтвержден"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Токен уже использован или истек"
+          },
+          "404": {
+            "description": "Токен не найден"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Подтвердить почту",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/resend-email-verification": {
+      "post": {
+        "operationId": "AuthController_resendEmailVerification",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Ссылка подтверждения создана",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Письмо подтверждения отправлено"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Повторно отправить подтверждение почты",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "operationId": "AuthController_forgotPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Если email существует, ссылка для сброса отправлена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Если email существует, ссылка для сброса отправлена"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невалидные данные"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Запросить ссылку для сброса пароля",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "operationId": "AuthController_resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Пароль успешно сброшен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Пароль успешно сброшен"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Токен уже использован или истек"
+          },
+          "404": {
+            "description": "Токен не найден"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Сбросить пароль по token из письма",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Успешный выход",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Успешный выход"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невалидный refresh token"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          },
+          {
+            "refreshToken": []
+          }
+        ],
+        "summary": "Выйти из системы",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Текущий пользователь сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "profile": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email",
+                          "example": "user@example.com"
+                        },
+                        "username": {
+                          "type": "string",
+                          "example": "donu"
+                        },
+                        "discriminator": {
+                          "type": "string",
+                          "example": "1234"
+                        },
+                        "avatarUrl": {
+                          "type": "string",
+                          "nullable": true,
+                          "example": null
+                        },
+                        "role": {
+                          "type": "string",
+                          "example": "user"
+                        }
+                      }
+                    },
+                    "emailVerification": {
+                      "type": "object",
+                      "properties": {
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "verified",
+                            "verification_pending",
+                            "verification_expired"
+                          ],
+                          "example": "verification_pending"
+                        },
+                        "secondsUntilBlock": {
+                          "type": "number",
+                          "example": 86400
+                        },
+                        "isVerified": {
+                          "type": "boolean",
+                          "example": false
+                        },
+                        "emailVerificationDeadlineAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "404": {
+            "description": "Пользователь не найден"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Получить информацию о текущем пользователе",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/google": {
+      "get": {
+        "operationId": "AuthController_googleAuth",
+        "parameters": [],
+        "responses": {
+          "302": {
+            "description": "Редирект на Google OAuth"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Начать авторизацию через Google",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/google/callback": {
+      "get": {
+        "operationId": "AuthController_googleCallback",
+        "parameters": [],
+        "responses": {
+          "302": {
+            "description": "Refresh cookie установлена, пользователь возвращен на frontend"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Callback авторизации через Google",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/github": {
+      "get": {
+        "operationId": "AuthController_githubAuth",
+        "parameters": [],
+        "responses": {
+          "302": {
+            "description": "Редирект на GitHub OAuth"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Начать авторизацию через GitHub",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/github/callback": {
+      "get": {
+        "operationId": "AuthController_githubCallback",
+        "parameters": [],
+        "responses": {
+          "302": {
+            "description": "Refresh cookie установлена, пользователь возвращен на frontend"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Callback авторизации через GitHub",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/yandex": {
+      "get": {
+        "operationId": "AuthController_yandexAuth",
+        "parameters": [],
+        "responses": {
+          "302": {
+            "description": "Редирект на Yandex OAuth"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Начать авторизацию через Yandex",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/yandex/callback": {
+      "get": {
+        "operationId": "AuthController_yandexCallback",
+        "parameters": [],
+        "responses": {
+          "302": {
+            "description": "Refresh cookie установлена, пользователь возвращен на frontend"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Callback авторизации через Yandex",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/vk": {
+      "get": {
+        "operationId": "AuthController_vkAuth",
+        "parameters": [],
+        "responses": {
+          "302": {
+            "description": "Редирект на VK ID OAuth"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Начать авторизацию через VK ID",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/vk/callback": {
+      "get": {
+        "operationId": "AuthController_vkCallback",
+        "parameters": [
+          {
+            "name": "device_id",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          },
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          },
+          {
+            "name": "code",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Refresh cookie установлена, пользователь возвращен на frontend"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Callback авторизации через VK ID",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/roles": {
+      "post": {
+        "operationId": "RoleController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Роль успешно создана"
+          },
+          "400": {
+            "description": "Невалидные данные"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Запрещено"
+          },
+          "409": {
+            "description": "Роль с таким именем уже существует"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Создать новую роль",
+        "tags": [
+          "Roles"
+        ]
+      },
+      "get": {
+        "operationId": "RoleController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Список ролей"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Запрещено"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Получить все активные роли (только админ)",
+        "tags": [
+          "Roles"
+        ]
+      }
+    },
+    "/roles/{id}": {
+      "get": {
+        "operationId": "RoleController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID роли в формате UUID v4",
+            "schema": {
+              "example": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Роль найдена"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Запрещено"
+          },
+          "404": {
+            "description": "Роль не найдена"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Получить роль по ID (админ, модератор)",
+        "tags": [
+          "Roles"
+        ]
+      },
+      "patch": {
+        "operationId": "RoleController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID роли в формате UUID v4",
+            "schema": {
+              "example": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Роль успешно обновлена"
+          },
+          "400": {
+            "description": "Невалидные данные"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Запрещено"
+          },
+          "404": {
+            "description": "Роль не найдена"
+          },
+          "409": {
+            "description": "Имя базовой роли нельзя изменить"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Обновить роль (только админ)",
+        "tags": [
+          "Roles"
+        ]
+      },
+      "delete": {
+        "operationId": "RoleController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID роли в формате UUID v4",
+            "schema": {
+              "example": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Роль успешно удалена"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Запрещено"
+          },
+          "404": {
+            "description": "Роль не найдена"
+          },
+          "409": {
+            "description": "Базовую роль нельзя удалить"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Удалить роль (мягкое удаление, только админ)",
+        "tags": [
+          "Roles"
+        ]
+      }
+    },
+    "/mail/test": {
+      "post": {
+        "operationId": "MailController_sendTestEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendTestEmailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Тестовое письмо отправлено"
+          },
+          "404": {
+            "description": "Недоступно в production"
+          },
+          "503": {
+            "description": "SMTP delivery failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "statusCode",
+                    "code",
+                    "message",
+                    "details",
+                    "path",
+                    "method",
+                    "timestamp"
+                  ],
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "FORBIDDEN"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Недостаточно прав в комнате"
+                    },
+                    "details": {
+                      "nullable": true,
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      ],
+                      "example": null
+                    },
+                    "path": {
+                      "type": "string",
+                      "example": "/rooms/invalid/state"
+                    },
+                    "method": {
+                      "type": "string",
+                      "example": "GET"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Отправить тестовое письмо вне production",
+        "tags": [
+          "Mail"
+        ]
+      }
+    },
+    "/features": {
+      "get": {
+        "operationId": "FeatureController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Список features"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Нужна роль admin и verified email"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Получить список features",
+        "tags": [
+          "Features"
+        ]
+      }
+    },
+    "/features/{id}": {
+      "get": {
+        "operationId": "FeatureController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID feature в формате UUID v4",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Feature найдена"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Нужна роль admin и verified email"
+          },
+          "404": {
+            "description": "Feature не найдена"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Получить feature по ID",
+        "tags": [
+          "Features"
+        ]
+      },
+      "patch": {
+        "operationId": "FeatureController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID feature в формате UUID v4",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFeatureDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Feature обновлена"
+          },
+          "400": {
+            "description": "Невалидные данные"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Нужна роль admin и verified email"
+          },
+          "404": {
+            "description": "Feature не найдена"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Обновить feature",
+        "tags": [
+          "Features"
+        ]
+      }
+    },
+    "/rooms": {
+      "post": {
+        "operationId": "RoomController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoomDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Комната создана, текущий пользователь стал owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "room": {
+                      "type": "object"
+                    },
+                    "currentParticipant": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "roomId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "userId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "owner",
+                            "moderator",
+                            "member"
+                          ]
+                        },
+                        "displayNameSnapshot": {
+                          "type": "string",
+                          "example": "donu#1234"
+                        },
+                        "joinedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z"
+                        },
+                        "leftAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z",
+                          "nullable": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z"
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                            },
+                            "username": {
+                              "type": "string",
+                              "example": "donu"
+                            },
+                            "discriminator": {
+                              "type": "string",
+                              "example": "1234"
+                            },
+                            "avatarUrl": {
+                              "type": "string",
+                              "nullable": true,
+                              "example": "https://example.com/avatar.png"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "invite": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Feature rooms.create недоступна",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "statusCode",
+                    "code",
+                    "message",
+                    "details",
+                    "path",
+                    "method",
+                    "timestamp"
+                  ],
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "FORBIDDEN"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Недостаточно прав в комнате"
+                    },
+                    "details": {
+                      "nullable": true,
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      ],
+                      "example": null
+                    },
+                    "path": {
+                      "type": "string",
+                      "example": "/rooms/invalid/state"
+                    },
+                    "method": {
+                      "type": "string",
+                      "example": "GET"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Создать комнату",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/join/{code}": {
+      "post": {
+        "operationId": "RoomController_joinByInvite",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "description": "Invite code",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Пользователь вошел в комнату",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "room": {
+                      "type": "object"
+                    },
+                    "currentParticipant": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "roomId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "userId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "owner",
+                            "moderator",
+                            "member"
+                          ]
+                        },
+                        "displayNameSnapshot": {
+                          "type": "string",
+                          "example": "donu#1234"
+                        },
+                        "joinedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z"
+                        },
+                        "leftAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z",
+                          "nullable": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z"
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                            },
+                            "username": {
+                              "type": "string",
+                              "example": "donu"
+                            },
+                            "discriminator": {
+                              "type": "string",
+                              "example": "1234"
+                            },
+                            "avatarUrl": {
+                              "type": "string",
+                              "nullable": true,
+                              "example": "https://example.com/avatar.png"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invite истек или уже использован"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Вход в комнату закрыт"
+          },
+          "404": {
+            "description": "Invite не найден"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Войти в комнату по invite code",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/leave": {
+      "post": {
+        "operationId": "RoomController_leave",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID комнаты в формате UUID v4",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Пользователь вышел из комнаты",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Вы вышли из комнаты"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "404": {
+            "description": "Активный участник не найден"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Выйти из комнаты",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/participants/{participantId}/role": {
+      "patch": {
+        "operationId": "RoomController_updateParticipantRole",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID комнаты в формате UUID v4",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "participantId",
+            "required": true,
+            "in": "path",
+            "description": "ID участника комнаты в формате UUID v4",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoomParticipantRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Роль участника изменена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                    },
+                    "roomId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                    },
+                    "userId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "moderator",
+                        "member"
+                      ]
+                    },
+                    "displayNameSnapshot": {
+                      "type": "string",
+                      "example": "donu#1234"
+                    },
+                    "joinedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z"
+                    },
+                    "leftAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "username": {
+                          "type": "string",
+                          "example": "donu"
+                        },
+                        "discriminator": {
+                          "type": "string",
+                          "example": "1234"
+                        },
+                        "avatarUrl": {
+                          "type": "string",
+                          "nullable": true,
+                          "example": "https://example.com/avatar.png"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нельзя изменить роль владельца"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Недостаточно прав в комнате",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "statusCode",
+                    "code",
+                    "message",
+                    "details",
+                    "path",
+                    "method",
+                    "timestamp"
+                  ],
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "FORBIDDEN"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Недостаточно прав в комнате"
+                    },
+                    "details": {
+                      "nullable": true,
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      ],
+                      "example": null
+                    },
+                    "path": {
+                      "type": "string",
+                      "example": "/rooms/invalid/state"
+                    },
+                    "method": {
+                      "type": "string",
+                      "example": "GET"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Активный участник не найден"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Изменить роль участника комнаты",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/access": {
+      "patch": {
+        "operationId": "RoomController_updateAccess",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID комнаты в формате UUID v4",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoomAccessDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Доступность входа изменена"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Недостаточно прав в комнате",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "statusCode",
+                    "code",
+                    "message",
+                    "details",
+                    "path",
+                    "method",
+                    "timestamp"
+                  ],
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 403
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "FORBIDDEN"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Недостаточно прав в комнате"
+                    },
+                    "details": {
+                      "nullable": true,
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      ],
+                      "example": null
+                    },
+                    "path": {
+                      "type": "string",
+                      "example": "/rooms/invalid/state"
+                    },
+                    "method": {
+                      "type": "string",
+                      "example": "GET"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Комната не найдена"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Изменить доступность входа в комнату",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/state": {
+      "get": {
+        "operationId": "RoomController_getState",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID комнаты в формате UUID v4",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Состояние комнаты",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "room": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "title": {
+                          "type": "string",
+                          "example": "Фильм вечером"
+                        },
+                        "createdByUserId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "isOpen": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "isTemporary": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "closedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z",
+                          "nullable": true
+                        },
+                        "closedReason": {
+                          "type": "string",
+                          "nullable": true,
+                          "example": null
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z"
+                        }
+                      }
+                    },
+                    "currentParticipant": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "roomId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "userId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "owner",
+                            "moderator",
+                            "member"
+                          ]
+                        },
+                        "displayNameSnapshot": {
+                          "type": "string",
+                          "example": "donu#1234"
+                        },
+                        "joinedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z"
+                        },
+                        "leftAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z",
+                          "nullable": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z"
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                            },
+                            "username": {
+                              "type": "string",
+                              "example": "donu"
+                            },
+                            "discriminator": {
+                              "type": "string",
+                              "example": "1234"
+                            },
+                            "avatarUrl": {
+                              "type": "string",
+                              "nullable": true,
+                              "example": "https://example.com/avatar.png"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "participants": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                          },
+                          "roomId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "owner",
+                              "moderator",
+                              "member"
+                            ]
+                          },
+                          "displayNameSnapshot": {
+                            "type": "string",
+                            "example": "donu#1234"
+                          },
+                          "joinedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2026-08-02T00:00:00.000Z"
+                          },
+                          "leftAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2026-08-02T00:00:00.000Z",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2026-08-02T00:00:00.000Z"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2026-08-02T00:00:00.000Z"
+                          },
+                          "user": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                              },
+                              "username": {
+                                "type": "string",
+                                "example": "donu"
+                              },
+                              "discriminator": {
+                                "type": "string",
+                                "example": "1234"
+                              },
+                              "avatarUrl": {
+                                "type": "string",
+                                "nullable": true,
+                                "example": "https://example.com/avatar.png"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "presence": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                          },
+                          "roomId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                          },
+                          "connectedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2026-08-02T00:00:00.000Z"
+                          },
+                          "lastSeenAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2026-08-02T00:00:00.000Z"
+                          },
+                          "disconnectedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2026-08-02T00:00:00.000Z",
+                            "nullable": true
+                          },
+                          "isOnline": {
+                            "type": "boolean",
+                            "example": true
+                          }
+                        }
+                      }
+                    },
+                    "video": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "roomId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "sourceUrl": {
+                          "type": "string",
+                          "example": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                        },
+                        "sourceType": {
+                          "type": "string",
+                          "enum": [
+                            "youtube",
+                            "direct"
+                          ]
+                        },
+                        "providerVideoId": {
+                          "type": "string",
+                          "nullable": true,
+                          "example": "dQw4w9WgXcQ"
+                        },
+                        "playing": {
+                          "type": "boolean",
+                          "example": false
+                        },
+                        "currentTime": {
+                          "type": "number",
+                          "example": 35.4
+                        },
+                        "effectiveCurrentTime": {
+                          "type": "number",
+                          "example": 36.1
+                        },
+                        "duration": {
+                          "type": "number",
+                          "nullable": true,
+                          "example": 212
+                        },
+                        "updatedByUserId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421",
+                          "nullable": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z"
+                        },
+                        "serverTime": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z"
+                        },
+                        "serverTimestamp": {
+                          "type": "number",
+                          "example": 1785628801200
+                        }
+                      }
+                    },
+                    "whiteboard": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421",
+                          "nullable": true
+                        },
+                        "roomId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                        },
+                        "enabled": {
+                          "type": "boolean",
+                          "example": false
+                        },
+                        "snapshot": {
+                          "type": "object",
+                          "properties": {
+                            "strokes": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                                  },
+                                  "userId": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                                  },
+                                  "color": {
+                                    "type": "string",
+                                    "example": "#ffcc00"
+                                  },
+                                  "width": {
+                                    "type": "number",
+                                    "example": 4
+                                  },
+                                  "points": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "example": 0.42
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "example": 0.31
+                                        },
+                                        "pressure": {
+                                          "type": "number",
+                                          "example": 0.8
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "createdAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "example": "2026-08-02T00:00:00.000Z"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "updatedByUserId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421",
+                          "nullable": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z",
+                          "nullable": true
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2026-08-02T00:00:00.000Z",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Нет доступа к комнате"
+          },
+          "404": {
+            "description": "Комната не найдена"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Получить состояние комнаты для восстановления UI",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}": {
+      "get": {
+        "operationId": "RoomController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID комнаты в формате UUID v4",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Комната найдена"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Нет доступа к комнате"
+          },
+          "404": {
+            "description": "Комната не найдена"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Получить комнату по ID",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{roomId}/video": {
+      "post": {
+        "operationId": "VideoSyncController_setSource",
+        "parameters": [
+          {
+            "name": "roomId",
+            "required": true,
+            "in": "path",
+            "description": "ID комнаты в формате UUID v4",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetVideoSourceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Источник видео установлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true,
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                    },
+                    "roomId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                    },
+                    "sourceUrl": {
+                      "type": "string",
+                      "example": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                    },
+                    "sourceType": {
+                      "type": "string",
+                      "enum": [
+                        "youtube",
+                        "direct"
+                      ]
+                    },
+                    "providerVideoId": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "dQw4w9WgXcQ"
+                    },
+                    "playing": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "currentTime": {
+                      "type": "number",
+                      "example": 35.4
+                    },
+                    "effectiveCurrentTime": {
+                      "type": "number",
+                      "example": 36.1
+                    },
+                    "duration": {
+                      "type": "number",
+                      "nullable": true,
+                      "example": 212
+                    },
+                    "updatedByUserId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z"
+                    },
+                    "serverTime": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z"
+                    },
+                    "serverTimestamp": {
+                      "type": "number",
+                      "example": 1785628801200
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невалидная или неподдерживаемая ссылка"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Нужна room role owner или moderator"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Установить источник видео в комнате",
+        "tags": [
+          "Video Sync"
+        ]
+      },
+      "get": {
+        "operationId": "VideoSyncController_getState",
+        "parameters": [
+          {
+            "name": "roomId",
+            "required": true,
+            "in": "path",
+            "description": "ID комнаты в формате UUID v4",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Состояние видео или null, если источник еще не задан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true,
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                    },
+                    "roomId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                    },
+                    "sourceUrl": {
+                      "type": "string",
+                      "example": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                    },
+                    "sourceType": {
+                      "type": "string",
+                      "enum": [
+                        "youtube",
+                        "direct"
+                      ]
+                    },
+                    "providerVideoId": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "dQw4w9WgXcQ"
+                    },
+                    "playing": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "currentTime": {
+                      "type": "number",
+                      "example": 35.4
+                    },
+                    "effectiveCurrentTime": {
+                      "type": "number",
+                      "example": 36.1
+                    },
+                    "duration": {
+                      "type": "number",
+                      "nullable": true,
+                      "example": 212
+                    },
+                    "updatedByUserId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z"
+                    },
+                    "serverTime": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z"
+                    },
+                    "serverTimestamp": {
+                      "type": "number",
+                      "example": 1785628801200
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Нет доступа к комнате"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Получить текущее состояние видео",
+        "tags": [
+          "Video Sync"
+        ]
+      }
+    },
+    "/rooms/{roomId}/chat/messages": {
+      "get": {
+        "operationId": "ChatController_findMessages",
+        "parameters": [
+          {
+            "name": "roomId",
+            "required": true,
+            "in": "path",
+            "description": "ID комнаты в формате UUID v4",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "before",
+            "required": false,
+            "in": "query",
+            "description": "Message ID для загрузки более старых сообщений",
+            "schema": {}
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "История сообщений, newest-first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                      },
+                      "roomId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                      },
+                      "userId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                      },
+                      "text": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "Привет"
+                      },
+                      "editedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-08-02T00:00:00.000Z",
+                        "nullable": true
+                      },
+                      "deletedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-08-02T00:00:00.000Z",
+                        "nullable": true
+                      },
+                      "deletedByUserId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421",
+                        "nullable": true
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-08-02T00:00:00.000Z"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-08-02T00:00:00.000Z"
+                      },
+                      "user": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                          },
+                          "username": {
+                            "type": "string",
+                            "example": "donu"
+                          },
+                          "discriminator": {
+                            "type": "string",
+                            "example": "1234"
+                          },
+                          "avatarUrl": {
+                            "type": "string",
+                            "nullable": true,
+                            "example": "https://example.com/avatar.png"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Нет доступа к комнате"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Получить историю сообщений комнаты",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/rooms/{roomId}/chat/read-state": {
+      "get": {
+        "operationId": "ChatController_getReadState",
+        "parameters": [
+          {
+            "name": "roomId",
+            "required": true,
+            "in": "path",
+            "description": "ID комнаты в формате UUID v4",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Состояние прочтения чата",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "roomId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                    },
+                    "userId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                    },
+                    "lastReadMessageId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421",
+                      "nullable": true
+                    },
+                    "lastReadAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z",
+                      "nullable": true
+                    },
+                    "unreadCount": {
+                      "type": "number",
+                      "example": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Нет доступа к комнате"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Получить состояние прочтения чата",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/rooms/{roomId}/chat/read": {
+      "post": {
+        "operationId": "ChatController_markRead",
+        "parameters": [
+          {
+            "name": "roomId",
+            "required": true,
+            "in": "path",
+            "description": "ID комнаты в формате UUID v4",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkChatReadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Состояние прочтения обновлено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "roomId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                    },
+                    "userId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421"
+                    },
+                    "lastReadMessageId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "8f6b0a84-82b7-4f39-a3d1-6dfb2c6e4421",
+                      "nullable": true
+                    },
+                    "lastReadAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-02T00:00:00.000Z",
+                      "nullable": true
+                    },
+                    "unreadCount": {
+                      "type": "number",
+                      "example": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Нет доступа к комнате"
+          },
+          "404": {
+            "description": "Сообщение не найдено"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Отметить сообщения комнаты прочитанными",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/realtime-api": {
+      "get": {
+        "operationId": "RealtimeApiController_getViewer",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "HTML viewer"
+          }
+        },
+        "summary": "Открыть HTML viewer для AsyncAPI realtime-документации",
+        "tags": [
+          "Realtime API"
+        ]
+      }
+    },
+    "/realtime-api/asyncapi.yaml": {
+      "get": {
+        "operationId": "RealtimeApiController_getAsyncApiSpec",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "AsyncAPI YAML"
+          }
+        },
+        "summary": "Получить AsyncAPI spec для Socket.IO событий",
+        "tags": [
+          "Realtime API"
+        ]
+      }
+    },
+    "/realtime-api/events": {
+      "get": {
+        "operationId": "RealtimeApiController_getEventsMarkdown",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Markdown со списком realtime events"
+          }
+        },
+        "summary": "Получить markdown-документацию Socket.IO событий",
+        "tags": [
+          "Realtime API"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Shared Watch API",
+    "description": "",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "jwt": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "name": "Authorization",
+        "description": "Enter JWT token",
+        "in": "header"
+      },
+      "cookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "refreshToken",
+        "description": "Refresh token for obtaining new access tokens"
+      }
+    },
+    "schemas": {
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "Password123!"
+          },
+          "username": {
+            "type": "string",
+            "example": "donu"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "example": "https://example.com/avatar.png"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "username"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "donu"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "example": "https://example.com/avatar.png"
+          }
+        }
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "example": "OldPassword123!"
+          },
+          "newPassword": {
+            "type": "string",
+            "example": "NewPassword456!"
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "Password123!"
+          },
+          "username": {
+            "type": "string",
+            "example": "donu"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "username"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "Password123!"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "VerifyEmailDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "ForgotPasswordDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string",
+            "example": "NewPassword456!"
+          }
+        },
+        "required": [
+          "token",
+          "newPassword"
+        ]
+      },
+      "CreateRoleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "moderator"
+          },
+          "displayName": {
+            "type": "string",
+            "example": "Модератор"
+          },
+          "description": {
+            "type": "string",
+            "example": "Может модерировать контент"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "name",
+          "displayName"
+        ]
+      },
+      "UpdateRoleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "moderator"
+          },
+          "displayName": {
+            "type": "string",
+            "example": "Модератор"
+          },
+          "description": {
+            "type": "string",
+            "example": "Может модерировать контент"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "SendTestEmailDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "target@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "UpdateFeatureDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "example": "Создание комнат"
+          },
+          "description": {
+            "type": "object",
+            "example": "Позволяет пользователю создавать комнаты"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "requiresEmailVerified": {
+            "type": "boolean",
+            "example": true
+          },
+          "requiresUnblocked": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "CreateRoomDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Фильм вечером"
+          },
+          "isOpen": {
+            "type": "boolean",
+            "example": true
+          },
+          "isTemporary": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "UpdateRoomParticipantRoleDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "moderator",
+              "member"
+            ]
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "UpdateRoomAccessDto": {
+        "type": "object",
+        "properties": {
+          "isOpen": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "isOpen"
+        ]
+      },
+      "SetVideoSourceDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          },
+          "duration": {
+            "type": "number",
+            "example": 212
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "MarkChatReadDto": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  }
+}

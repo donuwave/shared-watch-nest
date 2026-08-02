@@ -23,6 +23,7 @@
     "migration:show:prod": "npm run typeorm:prod -- migration:show",
     "migration:run:prod": "npm run typeorm:prod -- migration:run",
     "migration:revert:prod": "npm run typeorm:prod -- migration:revert",
+    "swagger:generate": "ts-node -r tsconfig-paths/register src/swagger/generate-openapi.ts",
     "bd:local:up": "docker-compose -f docker-compose.local.yml --env-file .env.local up -d",
     "bd:local:down": "docker-compose -f docker-compose.local.yml down",
     "bd:local:logs": "docker-compose -f docker-compose.local.yml logs -f",
